@@ -67,23 +67,24 @@ enum LiquidGlassMaterials {
 
     /// Adaptive dimming under a large Regular-glass panel. Stabilizes the
     /// backdrop so semantic `.primary` / `.secondary` text can clear WCAG AA
-    /// over both bright and dark wallpapers.
+    /// over both bright and dark wallpapers. Tuned so busy stripes no longer
+    /// read through titles / footnotes (owner feedback on macOS 27.2.1).
     static var panelScrim: Color {
         if reduceTransparency || increaseContrast {
-            return Color.adaptive(0x17120A, 0xF4EFE6, darkA: 0.94, lightA: 0.96)
+            return Color.adaptive(0x17120A, 0xF4EFE6, darkA: 0.98, lightA: 0.99)
         }
-        // Warm veil: opaque enough that stripes don't read through tiles,
-        // translucent enough that Regular glass still lenses the desktop.
-        return Color.adaptive(0x17120A, 0xF4EFE6, darkA: 0.72, lightA: 0.78)
+        // Near-opaque veil: Regular glass still lenses at the edges, but the
+        // content plane stays stable over bright/striped desktops.
+        return Color.adaptive(0x17120A, 0xF4EFE6, darkA: 0.90, lightA: 0.94)
     }
 
     /// Card / tile fill sitting on glass. Dark mode uses an elevated warm
     /// board (not a cream wash) so `.primary` / `.secondary` clear WCAG AA.
     static var cardFill: Color {
         if reduceTransparency || increaseContrast {
-            return Color.adaptive(0x2A2114, 0xFFFFFF, darkA: 0.96, lightA: 0.98)
+            return Color.adaptive(0x2A2114, 0xFFFFFF, darkA: 0.98, lightA: 1.0)
         }
-        return Color.adaptive(0x2F281F, 0xFFFFFF, darkA: 0.90, lightA: 0.94)
+        return Color.adaptive(0x2F281F, 0xFFFFFF, darkA: 0.96, lightA: 0.98)
     }
 
     /// Compact chip / tool-pill fill (icons need ≥ 3:1).

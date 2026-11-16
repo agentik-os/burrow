@@ -151,9 +151,25 @@ private struct PopoverOnWallpaper: View {
                            chip: ("61%", Brand.amber), footnote: "22.0/36 GB · swap 0.4 GB")
                 sampleTile(eyebrow: "Network", glyph: "network", accent: Brand.green, value: "8.4", unit: "MB/s",
                            chip: ("en0", Brand.blue), footnote: "↓ 4200 ↑ 180 KB/s")
-                sampleTile(eyebrow: "Battery", glyph: "battery.100", accent: Brand.green, value: "78", unit: "%",
-                           chip: ("100% Health", Brand.green), footnote: "342 cyc · 31°C")
+                sampleTile(eyebrow: "Fan", glyph: "fan", accent: PowerAccent.fan, value: "1200", unit: "RPM",
+                           chip: ("2 fans", Brand.textSecondary), footnote: "macOS manages speed")
             }
+
+            VStack(alignment: .leading, spacing: 7) {
+                HStack(spacing: 8) {
+                    Eyebrow(text: "Battery", glyph: "battery.100", color: Brand.green)
+                    Spacer()
+                    Chip(text: "100% Health", color: Brand.green)
+                }
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text("78%").font(Brand.mono(16, .semibold)).foregroundStyle(.primary)
+                    Text("4:12 left").font(Brand.mono(10)).foregroundStyle(.secondary)
+                }
+                Text("342 cyc · 31°C").font(Brand.mono(9)).foregroundStyle(.tertiary)
+            }
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(LiquidGlassMaterials.cardFill))
 
             VStack(alignment: .leading, spacing: 5) {
                 Eyebrow(text: "Top processes", glyph: "list.bullet", color: Brand.textSecondary)
@@ -186,11 +202,16 @@ private struct PopoverOnWallpaper: View {
         }
         .padding(13)
         .frame(width: 334)
-        // Paint the same scrim the macOS 26 panel uses so CI (15) still
-        // proves contrast over wallpaper; Regular glass layers on 26+.
+        // Always paint the production scrim (and an opaque card plane) so
+        // CI on macOS 15 proves contrast the same way macOS 26+ does under
+        // Regular glass. liquidGlassPanel is a no-op before 26.
         .background {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(LiquidGlassMaterials.panelScrim)
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(Brand.hairline.opacity(0.55), lineWidth: 1)
         }
         .liquidGlassPanel(in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .shadow(color: .black.opacity(0.28), radius: 24, y: 10)
