@@ -28,7 +28,7 @@ struct DupesView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            toolbar.padding(.horizontal, 18).padding(.top, 4).padding(.bottom, 12)
+            toolbar.padding(.horizontal, Brand.pageInset).padding(.top, 16).padding(.bottom, 14)
             Rectangle().fill(Brand.hairline).frame(height: 1)
             ZStack {
                 if !BurrowEngine.isAvailable {
@@ -48,7 +48,7 @@ struct DupesView: View {
         .overlay(alignment: .bottom) {
             if let result = trashResult {
                 DoneBanner(accent: Tool.dupes.accent, title: NSLocalizedString("Moved to Trash", comment: ""), detail: result)
-                    .padding(.horizontal, 18).padding(.bottom, 10)
+                    .padding(.horizontal, Brand.pageInset).padding(.bottom, 10)
                     .onTapGesture { trashResult = nil }
             }
         }
@@ -185,7 +185,7 @@ struct DupesView: View {
                 }
                 Spacer()
             }
-            .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 10)
+            .padding(.horizontal, Brand.pageInset).padding(.top, 14).padding(.bottom, 10)
             ScrollView {
                 LazyVStack(spacing: 10) {
                     ForEach(report.groups.prefix(200)) { group in
@@ -199,7 +199,7 @@ struct DupesView: View {
                     }
                     Color.clear.frame(height: 56) // room for the floating footer pill
                 }
-                .padding(.horizontal, 18).padding(.bottom, 6)
+                .padding(.horizontal, Brand.pageInset).padding(.bottom, 6)
             }
             .scrollIndicators(.hidden)
         }
@@ -269,9 +269,9 @@ struct DupesView: View {
                     .frame(width: 17, height: 17)
                 switch state {
                 case .all:
-                    Image(systemName: "checkmark").font(.system(size: Brand.scaled(9), weight: .bold)).foregroundStyle(.black)
+                    Image(systemName: "checkmark").font(.system(size: Brand.scaled(9), weight: .bold)).foregroundStyle(Brand.onInverse)
                 case .mixed:
-                    Image(systemName: "minus").font(.system(size: Brand.scaled(9), weight: .bold)).foregroundStyle(.black)
+                    Image(systemName: "minus").font(.system(size: Brand.scaled(9), weight: .bold)).foregroundStyle(Brand.onInverse)
                 case .none:
                     EmptyView()
                 }
@@ -292,7 +292,7 @@ struct DupesView: View {
                         .fill(ticked ? Tool.dupes.accent.opacity(0.9) : Brand.chipFill)
                         .frame(width: 15, height: 15)
                     if ticked {
-                        Image(systemName: "checkmark").font(.system(size: Brand.scaled(8), weight: .bold)).foregroundStyle(.black)
+                        Image(systemName: "checkmark").font(.system(size: Brand.scaled(8), weight: .bold)).foregroundStyle(Brand.onInverse)
                     }
                 }
                 .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Brand.hairline, lineWidth: 1))
@@ -357,7 +357,7 @@ struct DupesView: View {
             .disabled(model.selection.isEmpty || model.deduping || model.scanning || model.trashSnapshot == nil)
             if model.deduping { ProgressView().controlSize(.small) }
         }
-        .padding(.horizontal, 18).padding(.bottom, 12)
+        .padding(.horizontal, Brand.pageInset).padding(.bottom, 12)
     }
 
     /// Clean's exact trash flow: alert with count+size -> FileManager.trashItem per path

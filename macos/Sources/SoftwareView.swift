@@ -62,12 +62,12 @@ struct SoftwareView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            toolbar.padding(.horizontal, 18).padding(.top, 4).padding(.bottom, 12)
+            toolbar.padding(.horizontal, Brand.pageInset).padding(.top, 16).padding(.bottom, 14)
             Rectangle().fill(Brand.hairline).frame(height: 1)
             content
             if model.segment == .uninstall {
                 Rectangle().fill(Brand.hairline).frame(height: 1)
-                bottomBar.padding(.horizontal, 18).padding(.vertical, 10)
+                bottomBar.padding(.horizontal, Brand.pageInset).padding(.vertical, 10)
             }
         }
         // Pre-warm both LOCAL segments when the pane opens, so switching to
@@ -135,38 +135,31 @@ struct SoftwareView: View {
         }
     }
 
-    private var segmented: some View {
-        HStack(spacing: 2) {
-            seg("Uninstall", .uninstall)
-            seg("Updates", .updates)
-            seg("Startup", .startup)
-            if BrewClient.isInstalled { seg("Services", .services) }
-        }
-        .padding(3)
-        .background(Capsule().fill(Brand.insetFill))
-        .overlay(Capsule().strokeBorder(Brand.hairline, lineWidth: 1))
+    private var softwareSegments: [SoftwareSegment] {
+        var items: [SoftwareSegment] = [.uninstall, .updates, .startup]
+        if BrewClient.isInstalled { items.append(.services) }
+        return items
     }
 
-    private func seg(_ title: String, _ value: SoftwareSegment) -> some View {
-        let on = model.segment == value
-        return Button { model.segment = value } label: {
-            Text(NSLocalizedString(title, comment: "")).font(Brand.mono(11, on ? .semibold : .regular))
-                .foregroundStyle(on ? Brand.onInverse : Brand.textSecondary)
-                .padding(.horizontal, 12).padding(.vertical, 5)
-                .background { if on { Capsule().fill(Brand.inverse) } }
-                .contentShape(Capsule())
-        }.buttonStyle(.plain)
+    private func softwareSegmentTitle(_ value: SoftwareSegment) -> String {
+        switch value {
+        case .uninstall: return NSLocalizedString("Uninstall", comment: "")
+        case .updates:   return NSLocalizedString("Updates", comment: "")
+        case .startup:   return NSLocalizedString("Startup", comment: "")
+        case .services:  return NSLocalizedString("Services", comment: "")
+        }
+    }
+
+    private var segmented: some View {
+        SegmentedPills(
+            items: softwareSegments,
+            selection: model.segment,
+            title: { softwareSegmentTitle($0) },
+            onSelect: { model.segment = $0 })
     }
 
     private var searchField: some View {
-        HStack(spacing: 5) {
-            Image(systemName: "magnifyingglass").font(.system(size: Brand.scaled(10))).foregroundStyle(Brand.textTertiary)
-            TextField("Search apps", text: $model.query)
-                .textFieldStyle(.plain).font(Brand.sans(12)).frame(width: 130)
-        }
-        .padding(.horizontal, 8).padding(.vertical, 5)
-        .background(Capsule().fill(Brand.insetFill))
-        .overlay(Capsule().strokeBorder(Brand.hairline, lineWidth: 1))
+        QuietSearchField(placeholder: "Search apps", text: $model.query, width: 160)
     }
 
     private var startupFilter: some View {
@@ -180,14 +173,7 @@ struct SoftwareView: View {
     }
 
     private var startupSearch: some View {
-        HStack(spacing: 5) {
-            Image(systemName: "magnifyingglass").font(.system(size: Brand.scaled(10))).foregroundStyle(Brand.textTertiary)
-            TextField("Search items", text: $startup.query)
-                .textFieldStyle(.plain).font(Brand.sans(12)).frame(width: 130)
-        }
-        .padding(.horizontal, 8).padding(.vertical, 5)
-        .background(Capsule().fill(Brand.insetFill))
-        .overlay(Capsule().strokeBorder(Brand.hairline, lineWidth: 1))
+        QuietSearchField(placeholder: "Search items", text: $startup.query, width: 160)
     }
 
     // MARK: - Content
@@ -483,7 +469,7 @@ struct AppRow: View {
                         Image(systemName: "lock.fill").font(.system(size: Brand.scaled(7), weight: .bold))
                             .foregroundStyle(Brand.textTertiary)
                     } else if ticked {
-                        Image(systemName: "checkmark").font(.system(size: Brand.scaled(7), weight: .bold)).foregroundStyle(.black)
+                        Image(systemName: "checkmark").font(.system(size: Brand.scaled(7), weight: .bold)).foregroundStyle(Brand.onInverse)
                     }
                 }
                 .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(Brand.hairline, lineWidth: 1))

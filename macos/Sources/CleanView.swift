@@ -112,7 +112,7 @@ struct CleanView: View {
         .overlay(alignment: .bottom) {
             if let result = trashResult {
                 DoneBanner(accent: Tool.clean.accent, title: "Moved to Trash", detail: result)
-                    .padding(.horizontal, 18).padding(.bottom, 10)
+                    .padding(.horizontal, Brand.pageInset).padding(.bottom, 10)
                     .onTapGesture { trashResult = nil }
             }
         }
@@ -185,7 +185,7 @@ struct CleanView: View {
         let bytes = displayBytes(final: final)
         return VStack(spacing: 18) {
             Spacer()
-            HeroOrb(accent: Tool.clean.accent, size: 110)
+            HeroOrb(accent: Brand.textPrimary, size: 110, glyph: Tool.clean.glyph)
             VStack(spacing: 10) {
                 Group {
                     if reduceMotion {
@@ -441,7 +441,7 @@ struct CleanView: View {
                     }.buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 18).padding(.top, 4).padding(.bottom, 12)
+            .padding(.horizontal, Brand.pageInset).padding(.top, 16).padding(.bottom, 14)
             Rectangle().fill(Brand.hairline).frame(height: 1)
             if case .finished(.done(exit: 0)) = realFlow.state {
                 DoneBanner(accent: Tool.clean.accent, title: "Cleaned", detail: cleanedDetail)

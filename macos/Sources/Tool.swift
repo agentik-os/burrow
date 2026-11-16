@@ -2,11 +2,9 @@
 //  Tool.swift
 //  Burrow
 //
-//  The five tools, each with its own colour identity and a window tint
-//  that re-themes the whole window as you switch — Burrow's own palette
-//  and taglines. `navOrder` is the left-to-right order in the top pill
-//  nav; `.status` is where Burrow opens because the live dashboard is
-//  the thing that's actually built.
+//  The tools, each with a monochrome SF Symbol. Navigation colour is
+//  shared (see Brand) — a tool no longer repaints the window. `navOrder`
+//  is the sidebar order. `.status` is the live dashboard, reached as Home.
 //
 
 import SwiftUI
@@ -48,42 +46,26 @@ enum Tool: String, CaseIterable, Identifiable {
 
     var glyph: String {
         switch self {
-        case .clean:     return "sparkles"
-        case .purge:     return "folder.badge.minus"
-        case .installer: return "arrow.down.app"
-        case .apps:      return "shippingbox"
-        case .optimize:  return "wand.and.stars"
-        case .analyze:   return "square.grid.2x2"
+        case .clean:     return "trash"
+        case .purge:     return "folder"
+        case .installer: return "arrow.down.circle"
+        case .apps:      return "square.grid.2x2"
+        case .optimize:  return "slider.horizontal.3"
+        case .analyze:   return "chart.pie"
         case .dupes:     return "doc.on.doc"
-        case .orphans:   return "externaldrive.badge.questionmark"
-        case .photos:    return "photo.on.rectangle.angled"
-        case .status:    return "waveform.path.ecg"
+        case .orphans:   return "tray"
+        case .photos:    return "photo"
+        case .status:    return "waveform.path"
         case .ports:     return "network"
         case .net:       return "arrow.up.arrow.down"
         case .connectivity: return "wifi"
-        case .tuneup:    return "slider.horizontal.3"
+        case .tuneup:    return "wrench.and.screwdriver"
         }
     }
 
-    /// The tool's signature accent.
-    var accent: Color {
-        switch self {
-        case .clean:     return Color(hex: 0x35C2A5) // teal
-        case .purge:     return Color(hex: 0x6FB06A) // moss
-        case .installer: return Color(hex: 0xD98C5F) // ginger
-        case .apps:      return Color(hex: 0xF0714E) // coral
-        case .optimize:  return Color(hex: 0x8E84F0) // violet
-        case .analyze:   return Color(hex: 0x4FA3E3) // azure
-        case .dupes:     return Color(hex: 0xDB7E9C) // rose
-        case .orphans:   return Color(hex: 0xB7BE5A) // olive
-        case .photos:    return Color(hex: 0xD57BC4) // orchid
-        case .status:    return Color(hex: 0xE6A93C) // gold
-        case .ports:     return Color(hex: 0xB58BD6) // lilac
-        case .net:       return Color(hex: 0x6E8FE0) // indigo
-        case .connectivity: return Color(hex: 0x4FC3D9) // cyan
-        case .tuneup:    return Color(hex: 0x5AA98B) // sage
-        }
-    }
+    /// Tools share one ink. Status colour (success, warning, danger) lives
+    /// on `Brand`, not on the tool, so navigation stays monochrome.
+    var accent: Color { Brand.textPrimary }
 
     /// Our own one-liner per tool — earthy, in keeping with the name.
     var tagline: String {

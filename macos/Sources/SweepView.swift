@@ -162,7 +162,7 @@ struct SweepView: View {
         let bytes = foundBytes
         return VStack(spacing: 18) {
             Spacer()
-            HeroOrb(accent: cfg.tool.accent, size: 110)
+            HeroOrb(accent: Brand.textPrimary, size: 110, glyph: cfg.tool.glyph)
             VStack(spacing: 10) {
                 Group {
                     if reduceMotion {
@@ -205,7 +205,7 @@ struct SweepView: View {
                     Label("Back", systemImage: "chevron.left").font(Brand.mono(11)).foregroundStyle(Brand.textSecondary)
                 }.buttonStyle(.plain)
             }
-            .padding(.horizontal, 18).padding(.top, 4).padding(.bottom, 12)
+            .padding(.horizontal, Brand.pageInset).padding(.top, 16).padding(.bottom, 14)
             Rectangle().fill(Brand.hairline).frame(height: 1)
             if nothing {
                 VStack(spacing: 12) {
@@ -301,7 +301,7 @@ struct SweepView: View {
                     }.buttonStyle(.plain)
                 }
             }
-            .padding(.horizontal, 18).padding(.top, 4).padding(.bottom, 12)
+            .padding(.horizontal, Brand.pageInset).padding(.top, 16).padding(.bottom, 14)
             Rectangle().fill(Brand.hairline).frame(height: 1)
             if case .finished(.done(exit: 0)) = realFlow.state {
                 DoneBanner(accent: cfg.tool.accent, title: "Removed",

@@ -52,8 +52,14 @@ struct PermissionRow: View {
             }
         }
         .padding(14)
-        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Brand.cardFill))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Brand.hairline, lineWidth: 1))
+        .background(
+            RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
+                .fill(Brand.cardFill)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
+                .strokeBorder(Brand.hairline, lineWidth: 1)
+        )
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(title)
         .accessibilityValue(granted ? NSLocalizedString("Granted", comment: "")
@@ -65,8 +71,14 @@ struct PermissionRow: View {
             Text(label)
                 .font(Brand.sans(11, .semibold)).foregroundStyle(Brand.textPrimary)
                 .padding(.horizontal, 12).padding(.vertical, 6)
-                .background(Capsule().fill(Brand.chipFill))
-                .overlay(Capsule().strokeBorder(Brand.hairline, lineWidth: 1))
+                .background(
+                    RoundedRectangle(cornerRadius: Brand.radiusControl, style: .continuous)
+                        .fill(Brand.chipFill)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: Brand.radiusControl, style: .continuous)
+                        .strokeBorder(Brand.hairline, lineWidth: 1)
+                )
         }
         .buttonStyle(.plain)
     }

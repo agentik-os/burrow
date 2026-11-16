@@ -285,7 +285,7 @@ struct HistoryView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            toolbar.padding(.horizontal, 18).padding(.top, 8).padding(.bottom, 12)
+            toolbar.padding(.horizontal, Brand.pageInset).padding(.top, 16).padding(.bottom, 14)
                 Rectangle().fill(Brand.hairline).frame(height: 1)
                 ScrollView {
                     VStack(spacing: 16) {
@@ -356,21 +356,12 @@ struct HistoryView: View {
     }
 
     private var rangePills: some View {
-        HStack(spacing: 2) {
-            ForEach(HistoryRange.all) { r in
-                let on = r == range
-                Button { range = r } label: {
-                    Text(r.label).font(Brand.mono(11, on ? .semibold : .regular))
-                        .foregroundStyle(on ? Brand.base : Brand.textSecondary)
-                        .padding(.horizontal, 9).padding(.vertical, 4)
-                        .background { if on { Capsule().fill(Brand.textPrimary) } }
-                        .contentShape(Capsule())
-                }.buttonStyle(.plain)
-            }
-        }
-        .padding(3)
-        .background(Capsule().fill(Brand.chipFill))
-        .overlay(Capsule().strokeBorder(Brand.hairline, lineWidth: 1))
+        SegmentedPills(
+            items: HistoryRange.all,
+            selection: range,
+            size: 12,
+            title: { $0.label },
+            onSelect: { range = $0 })
     }
 
     // ChartMarks now lives at file scope (drives the metric model above).
@@ -704,21 +695,12 @@ struct HistoryView: View {
     }
 
     private var procMetricToggle: some View {
-        HStack(spacing: 2) {
-            ForEach(ProcMetric.allCases) { m in
-                let on = m == procMetric
-                Button { procMetric = m } label: {
-                    Text(m.rawValue).font(Brand.mono(9, on ? .bold : .regular))
-                        .foregroundStyle(on ? Brand.base : Brand.textSecondary)
-                        .padding(.horizontal, 7).padding(.vertical, 2)
-                        .background { if on { Capsule().fill(Brand.textPrimary) } }
-                        .contentShape(Capsule())
-                }.buttonStyle(.plain)
-            }
-        }
-        .padding(2)
-        .background(Capsule().fill(Brand.chipFill))
-        .overlay(Capsule().strokeBorder(Brand.hairline, lineWidth: 1))
+        SegmentedPills(
+            items: Array(ProcMetric.allCases),
+            selection: procMetric,
+            size: 11,
+            title: { $0.rawValue },
+            onSelect: { procMetric = $0 })
     }
 
     // MARK: - Load lifecycle

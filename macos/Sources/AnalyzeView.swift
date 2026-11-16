@@ -39,11 +39,14 @@ struct AnalyzeView: View {
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(spacing: 8) {
-                Circle()
-                    .fill(RadialGradient(colors: [Tool.analyze.accent.opacity(0.9), Tool.analyze.accent.opacity(0.15)],
-                                         center: .init(x: 0.4, y: 0.35), startRadius: 2, endRadius: 60))
-                    .frame(width: 78, height: 78)
-                    .shadow(color: Tool.analyze.accent.opacity(0.4), radius: 22)
+                ZStack {
+                    Circle().fill(Brand.cardFill)
+                    Circle().strokeBorder(Brand.hairline, lineWidth: 1)
+                    Image(systemName: Tool.analyze.glyph)
+                        .font(.system(size: Brand.scaled(22), weight: .regular))
+                        .foregroundStyle(Brand.textSecondary)
+                }
+                .frame(width: 72, height: 72)
                 Text(model.summaryLine)
                     .font(Brand.mono(11)).foregroundStyle(Brand.textSecondary)
             }

@@ -2,9 +2,9 @@
 //  RootView.swift
 //  Burrow
 //
-//  The window shell: behind-window vibrancy → per-pane tint scrim → top
-//  nav → pane content. One window, one navigation model — the five
-//  tools plus Settings and History are all `Pane`s shown right here.
+//  The window shell: a translucent sidebar and a calm canvas. One window,
+//  one navigation model — the tools plus Settings and Monitor are all
+//  `Pane`s shown right here.
 //
 
 import SwiftUI
@@ -129,35 +129,14 @@ struct RootView: View {
     }
 
     var body: some View {
-        ZStack {
-            VisualEffectBackground().ignoresSafeArea()
-            // One stable charcoal ground on every pane — switching tools no
-            // longer re-tints the whole window in that tool's colour.
-            Brand.windowVeil.ignoresSafeArea()
-            // A single soft warm glow in the corner — the house "gradient",
-            // kept ambient rather than a per-tool window wash.
-            Brand.ambientGlow.ignoresSafeArea()
-            // A faint film grain over the ground — tactile, not flat.
-            GrainOverlay()
-
-            ZStack(alignment: .topLeading) {
-                // Content sits under the floating rail, inset on the left to
-                // clear it. The rail is drawn last so its hover labels fly out
-                // above the pane instead of behind it.
-                content
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.leading, 88)
-                    .padding(.top, 12)
-
-                // Floating left rail — a detached, rounded rail of icon buttons
-                // in place of a top tab bar. Padded clear of the traffic lights
-                // and drawn over the content.
-                FloatingRail(selected: $pane)
-                    .padding(.leading, WindowMetrics.railLeading)
-                    .padding(.top, WindowMetrics.railTop)
-                    .padding(.bottom, WindowMetrics.railBottom)
-            }
+        HStack(spacing: 0) {
+            SidebarNav(selected: $pane)
+            Rectangle().fill(Brand.hairline).frame(width: 1)
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Brand.canvas)
         }
+        .background(Brand.canvas)
         .frame(minWidth: WindowMetrics.minimumSize.width,
                minHeight: WindowMetrics.minimumSize.height)
         .animation(.easeInOut(duration: 0.22), value: pane)
@@ -216,7 +195,7 @@ struct RootView: View {
                             fdaBannerDismissed = true
                         }
                     })
-                .padding(.horizontal, 18).padding(.bottom, 14)
+                .padding(.horizontal, Brand.pageInset).padding(.bottom, 16)
                 .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
             } else if !helperInstalled, !helperBannerDismissed {
                 AccessBanner(
@@ -235,7 +214,7 @@ struct RootView: View {
                             helperBannerDismissed = true
                         }
                     })
-                .padding(.horizontal, 18).padding(.bottom, 14)
+                .padding(.horizontal, Brand.pageInset).padding(.bottom, 16)
                 .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
             }
         }

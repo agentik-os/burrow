@@ -112,7 +112,7 @@ struct OptimizeView: View {
                 }.buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 18).padding(.top, 4).padding(.bottom, 12)
+        .padding(.horizontal, Brand.pageInset).padding(.top, 16).padding(.bottom, 14)
     }
 
     private var statusText: String {

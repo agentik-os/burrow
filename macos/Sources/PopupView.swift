@@ -94,13 +94,7 @@ struct PopupView: View {
         // keeps roughly the same line lengths instead of wrapping everywhere.
         // HUDController sizes the popover from the same number.
         .frame(width: Brand.scaled(334))
-        // Warm tactile ground + grain, matching the main window — the HUD used
-        // to ride bare popover material and read as unfinished beside it.
-        .background {
-            Brand.windowVeil
-            Brand.ambientGlow
-            GrainOverlay()
-        }
+        .background(Brand.canvas)
         .fixedSize(horizontal: false, vertical: true)
         // Three task-scoped subscriptions replace the old 1 s + 20 s timer
         // pair (issue #53): the snapshot and sparkline pumps are shared with

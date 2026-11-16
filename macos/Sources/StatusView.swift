@@ -507,17 +507,17 @@ struct LowSpaceBar: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(Brand.trackFill)
                 Capsule()
-                    .fill(LinearGradient(colors: gradientColors, startPoint: .leading, endPoint: .trailing))
+                    .fill(fill)
                     .frame(width: g.size.width * CGFloat(max(0, min(fraction, 1))))
             }
         }
         .frame(height: 6)
     }
 
-    private var gradientColors: [Color] {
-        if fraction >= 0.9 { return [Brand.amber, Brand.red] }
-        if fraction >= 0.75 { return [Brand.blue, Brand.amber] }
-        return [Brand.blue, Brand.blue]
+    private var fill: Color {
+        if fraction >= 0.9 { return Brand.red }
+        if fraction >= 0.75 { return Brand.amber }
+        return Brand.accent
     }
 }
 

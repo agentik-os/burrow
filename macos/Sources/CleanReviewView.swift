@@ -172,9 +172,9 @@ struct CleanReviewView: View {
                     .frame(width: 17, height: 17)
                 switch state {
                 case .all:
-                    Image(systemName: "checkmark").font(.system(size: Brand.scaled(9), weight: .bold)).foregroundStyle(.black)
+                    Image(systemName: "checkmark").font(.system(size: Brand.scaled(9), weight: .bold)).foregroundStyle(Brand.onInverse)
                 case .mixed:
-                    Image(systemName: "minus").font(.system(size: Brand.scaled(9), weight: .bold)).foregroundStyle(.black)
+                    Image(systemName: "minus").font(.system(size: Brand.scaled(9), weight: .bold)).foregroundStyle(Brand.onInverse)
                 case .none:
                     EmptyView()
                 }
@@ -197,7 +197,7 @@ struct CleanReviewView: View {
                         .fill(ticked ? accent.opacity(0.9) : Brand.chipFill)
                         .frame(width: 15, height: 15)
                     if ticked {
-                        Image(systemName: "checkmark").font(.system(size: Brand.scaled(8), weight: .bold)).foregroundStyle(.black)
+                        Image(systemName: "checkmark").font(.system(size: Brand.scaled(8), weight: .bold)).foregroundStyle(Brand.onInverse)
                     }
                 }
                 .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Brand.hairline, lineWidth: 1))

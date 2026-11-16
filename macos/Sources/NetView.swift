@@ -26,7 +26,7 @@ struct NetView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            toolbar.padding(.horizontal, 18).padding(.top, 4).padding(.bottom, 12)
+            toolbar.padding(.horizontal, Brand.pageInset).padding(.top, 16).padding(.bottom, 14)
             Rectangle().fill(Brand.hairline).frame(height: 1)
             ZStack {
                 if !BurrowEngine.isAvailable {
@@ -142,11 +142,11 @@ struct NetView: View {
                         Text(note)
                             .font(Brand.mono(10)).foregroundStyle(Brand.textTertiary)
                             .multilineTextAlignment(.center)
-                            .padding(.vertical, 10).padding(.horizontal, 18)
+                            .padding(.vertical, 10).padding(.horizontal, Brand.pageInset)
                     }
                     Color.clear.frame(height: 16)
                 }
-                .padding(.horizontal, 18)
+                .padding(.horizontal, Brand.pageInset)
             }
             .scrollIndicators(.hidden)
         }

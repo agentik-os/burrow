@@ -475,9 +475,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         window.isMovableByWindowBackground = true
         window.center()
         window.isReleasedWhenClosed = false
-        // Derived from the rail's own height — see WindowMetrics. The window
-        // uses fullSizeContentView, so the frame minimum IS the content
-        // minimum; there is no title bar to subtract.
+        // See WindowMetrics. The window uses fullSizeContentView, so the
+        // frame minimum IS the content minimum; there is no title bar to
+        // subtract. The sidebar scrolls, so this no longer tracks tool count.
         window.minSize = NSSize(width: WindowMetrics.minimumSize.width,
                                 height: WindowMetrics.minimumSize.height)
         window.delegate = self
