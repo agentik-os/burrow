@@ -2,8 +2,9 @@
 //  LiquidGlassSnapshotTests.swift
 //  BurrowTests
 //
-//  Renders the navigation rail when BURROW_SNAPSHOT_DIR is set, or when
-//  Tests/.write-ui-snapshots exists. Skips otherwise.
+//  Renders the navigation rail and HUD contrast previews when
+//  BURROW_SNAPSHOT_DIR is set, or when Tests/.write-ui-snapshots exists.
+//  Skips otherwise.
 //
 
 import AppKit
@@ -13,6 +14,26 @@ import XCTest
 
 final class LiquidGlassSnapshotTests: XCTestCase {
     func testWriteRailSnapshotsWhenRequested() throws {
+        let dir = try snapshotDirectory()
+        let size = CGSize(width: 520, height: 720)
+        try write(RailParity(), name: "rail-parity-light", scheme: .light, dir: dir, size: size)
+        try write(RailParity(), name: "rail-parity-dark", scheme: .dark, dir: dir, size: size)
+    }
+
+    func testWritePopoverContrastSnapshotsWhenRequested() throws {
+        let dir = try snapshotDirectory()
+        let size = CGSize(width: 720, height: 980)
+        try write(PopoverOnWallpaper(wallpaper: .brightStriped),
+                  name: "popover-contrast-bright-wallpaper", scheme: .light, dir: dir, size: size)
+        try write(PopoverOnWallpaper(wallpaper: .darkBusy),
+                  name: "popover-contrast-dark-wallpaper", scheme: .dark, dir: dir, size: size)
+        try write(PopoverOnWallpaper(wallpaper: .brightStriped),
+                  name: "popover-contrast-bright-wallpaper-dark-ui", scheme: .dark, dir: dir, size: size)
+        try write(PopoverOnWallpaper(wallpaper: .darkBusy),
+                  name: "popover-contrast-dark-wallpaper-light-ui", scheme: .light, dir: dir, size: size)
+    }
+
+    private func snapshotDirectory() throws -> URL {
         let testsDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
         let sentinel = testsDir.appendingPathComponent(".write-ui-snapshots")
         let envDir = ProcessInfo.processInfo.environment["BURROW_SNAPSHOT_DIR"]
@@ -21,9 +42,7 @@ final class LiquidGlassSnapshotTests: XCTestCase {
         let dir = envDir.flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0, isDirectory: true) }
             ?? testsDir.appendingPathComponent("ui-snapshots")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let size = CGSize(width: 520, height: 720)
-        try write(RailParity(), name: "rail-parity-light", scheme: .light, dir: dir, size: size)
-        try write(RailParity(), name: "rail-parity-dark", scheme: .dark, dir: dir, size: size)
+        return dir
     }
 
     private func write<V: View>(_ view: V, name: String, scheme: ColorScheme, dir: URL, size: CGSize) throws {
@@ -36,9 +55,13 @@ final class LiquidGlassSnapshotTests: XCTestCase {
         window.contentView = host
         host.layoutSubtreeIfNeeded()
         window.displayIfNeeded()
-        guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds),
-              let png = rep.representation(using: .png, properties: [:]) else {
+        guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else {
             XCTFail("no bitmap for \(name)")
+            return
+        }
+        host.cacheDisplay(in: host.bounds, to: rep)
+        guard let png = rep.representation(using: .png, properties: [:]) else {
+            XCTFail("no png for \(name)")
             return
         }
         try png.write(to: dir.appendingPathComponent("\(name).png"))
@@ -46,19 +69,19 @@ final class LiquidGlassSnapshotTests: XCTestCase {
 }
 
 /// Left: the upstream rail fill. Right: FloatingRail, which uses that fill
-/// before macOS 26 and Regular Liquid Glass on macOS 26.
+/// before macOS 26 and Regular Liquid Glass + scrim on macOS 26.
 private struct RailParity: View {
     var body: some View {
         HStack(alignment: .top, spacing: 24) {
             VStack(spacing: 8) {
-                Text("Upstream material").font(Brand.sans(12, .semibold)).foregroundStyle(Brand.textPrimary)
+                Text("Upstream material").font(Brand.sans(12, .semibold)).foregroundStyle(.primary)
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .fill(Brand.cardFill)
                     .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Brand.hairline, lineWidth: 1))
                     .frame(width: RailMetrics.width, height: 640)
             }
             VStack(spacing: 8) {
-                Text("This build").font(Brand.sans(12, .semibold)).foregroundStyle(Brand.textPrimary)
+                Text("This build").font(Brand.sans(12, .semibold)).foregroundStyle(.primary)
                 FloatingRail(selected: .constant(.home))
                     .frame(height: 640)
             }
@@ -66,5 +89,218 @@ private struct RailParity: View {
         .padding(16)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(Brand.base)
+    }
+}
+
+private enum SnapshotWallpaper {
+    case brightStriped, darkBusy
+}
+
+/// Static HUD chrome over a busy wallpaper — proves panel scrim + denser
+/// cards + semantic foregrounds without needing a live MoleStatus.
+private struct PopoverOnWallpaper: View {
+    let wallpaper: SnapshotWallpaper
+
+    var body: some View {
+        ZStack {
+            wallpaperView
+            VStack {
+                Spacer(minLength: 36)
+                hud
+                    .padding(.horizontal, 48)
+                Spacer(minLength: 36)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    @ViewBuilder private var wallpaperView: some View {
+        switch wallpaper {
+        case .brightStriped:
+            BrightStripedWallpaper()
+        case .darkBusy:
+            DarkBusyWallpaper()
+        }
+    }
+
+    private var hud: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            HStack(spacing: 8) {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 13)).foregroundStyle(Brand.green)
+                Text("92").font(Brand.mono(16, .semibold)).foregroundStyle(.primary)
+                Text("All systems nominal").font(Brand.sans(11)).foregroundStyle(.secondary)
+                Spacer(minLength: 6)
+                Text("128 GB free").font(Brand.mono(10)).foregroundStyle(.tertiary)
+                Image(systemName: "chevron.right").font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+            }
+
+            HStack(spacing: 5) {
+                Chip(text: "M3 Pro", color: Brand.textSecondary)
+                Chip(text: "36 GB", color: Brand.textSecondary)
+                Chip(text: "macOS 27.2.1", color: Brand.textSecondary)
+                Chip(text: "up 2d 4h", color: Brand.textSecondary)
+                Spacer()
+            }
+
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                sampleTile(eyebrow: "CPU", glyph: "cpu", accent: Brand.green, value: "24", unit: "%",
+                           chip: ("48°C", Brand.orange), footnote: "load 1.42")
+                sampleTile(eyebrow: "Memory", glyph: "memorychip", accent: Brand.amber, value: "61", unit: "%",
+                           chip: ("61%", Brand.amber), footnote: "22.0/36 GB · swap 0.4 GB")
+                sampleTile(eyebrow: "Network", glyph: "network", accent: Brand.green, value: "8.4", unit: "MB/s",
+                           chip: ("en0", Brand.blue), footnote: "↓ 4200 ↑ 180 KB/s")
+                sampleTile(eyebrow: "Battery", glyph: "battery.100", accent: Brand.green, value: "78", unit: "%",
+                           chip: ("100% Health", Brand.green), footnote: "342 cyc · 31°C")
+            }
+
+            VStack(alignment: .leading, spacing: 5) {
+                Eyebrow(text: "Top processes", glyph: "list.bullet", color: Brand.textSecondary)
+                processRow("Cursor", cpu: 18.2, mem: "1.4 GB")
+                processRow("WindowServer", cpu: 9.1, mem: "420 MB")
+                processRow("Safari", cpu: 4.6, mem: "890 MB")
+            }
+
+            HStack(spacing: 6) {
+                utility("cup.and.saucer.fill", "Stay Awake")
+                utility("rectangle.inset.filled", "Wipe")
+                Spacer()
+            }
+
+            Rectangle().fill(Brand.hairline).frame(height: 1)
+
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 5), spacing: 6) {
+                ForEach(Array(Tool.navOrder.prefix(5))) { tool in
+                    Image(systemName: tool.glyph)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(tool.accent)
+                        .frame(maxWidth: .infinity, minHeight: 26)
+                        .background(Capsule().fill(LiquidGlassMaterials.chipFill))
+                        .overlay(Capsule().strokeBorder(tool.accent.opacity(0.45), lineWidth: 0.75))
+                }
+            }
+
+            Text(verbatim: "MCP · stdio (burrow --mcp)")
+                .font(Brand.mono(9)).foregroundStyle(.secondary)
+        }
+        .padding(13)
+        .frame(width: 334)
+        // Paint the same scrim the macOS 26 panel uses so CI (15) still
+        // proves contrast over wallpaper; Regular glass layers on 26+.
+        .background {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(LiquidGlassMaterials.panelScrim)
+        }
+        .liquidGlassPanel(in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .shadow(color: .black.opacity(0.28), radius: 24, y: 10)
+    }
+
+    private func sampleTile(eyebrow: String, glyph: String, accent: Color,
+                            value: String, unit: String,
+                            chip: (String, Color), footnote: String) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 4) {
+                Eyebrow(text: eyebrow, glyph: glyph, color: accent)
+                Spacer(minLength: 2)
+                Chip(text: chip.0, color: chip.1)
+            }
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(value).font(Brand.mono(15, .semibold)).foregroundStyle(.primary)
+                Text(unit).font(Brand.mono(9)).foregroundStyle(.secondary)
+            }
+            MiniChart(values: [0.2, 0.35, 0.28, 0.55, 0.4, 0.62, 0.48, 0.7], color: accent, style: .area)
+                .frame(height: 13)
+            Text(footnote).font(Brand.mono(8.5)).foregroundStyle(.tertiary).lineLimit(1)
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(LiquidGlassMaterials.cardFill))
+        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
+    }
+
+    private func processRow(_ name: String, cpu: Double, mem: String) -> some View {
+        HStack(spacing: 8) {
+            RoundedRectangle(cornerRadius: 3)
+                .fill(LiquidGlassMaterials.chipFill)
+                .frame(width: 15, height: 15)
+                .overlay(
+                    Image(systemName: "app.fill")
+                        .font(.system(size: 8))
+                        .foregroundStyle(.secondary)
+                )
+            Text(name).font(Brand.sans(11)).foregroundStyle(.primary).lineLimit(1)
+            Spacer(minLength: 6)
+            Text(String(format: "%.1f%%", cpu)).font(Brand.mono(10)).foregroundStyle(.secondary)
+            Text(mem).font(Brand.mono(10)).foregroundStyle(.tertiary)
+                .frame(width: 52, alignment: .trailing)
+        }
+    }
+
+    private func utility(_ glyph: String, _ label: String) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: glyph).font(.system(size: 10, weight: .medium))
+            Text(label).font(Brand.mono(10, .medium))
+        }
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 9).padding(.vertical, 5)
+        .background(Capsule().fill(LiquidGlassMaterials.chipFill))
+        .overlay(Capsule().strokeBorder(Brand.hairline, lineWidth: 0.75))
+    }
+}
+
+private struct BrightStripedWallpaper: View {
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [
+                Color(hex: 0xF7F1E3), Color(hex: 0xE8F0FF), Color(hex: 0xFFE8D6), Color(hex: 0xE6F7EA)
+            ], startPoint: .topLeading, endPoint: .bottomTrailing)
+            GeometryReader { geo in
+                Path { path in
+                    let step: CGFloat = 28
+                    var x: CGFloat = -geo.size.height
+                    while x < geo.size.width + geo.size.height {
+                        path.move(to: CGPoint(x: x, y: 0))
+                        path.addLine(to: CGPoint(x: x + geo.size.height, y: geo.size.height))
+                        x += step
+                    }
+                }
+                .stroke(Color(hex: 0x2A2114).opacity(0.18), lineWidth: 10)
+            }
+            Circle().fill(Color(hex: 0x5B8DEF).opacity(0.35)).frame(width: 280, height: 280)
+                .offset(x: 210, y: -260)
+            Circle().fill(Color(hex: 0xF0714E).opacity(0.28)).frame(width: 220, height: 220)
+                .offset(x: -240, y: 280)
+        }
+        .clipped()
+    }
+}
+
+private struct DarkBusyWallpaper: View {
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [
+                Color(hex: 0x0B1020), Color(hex: 0x1A1430), Color(hex: 0x102018)
+            ], startPoint: .top, endPoint: .bottom)
+            GeometryReader { geo in
+                Path { path in
+                    let step: CGFloat = 34
+                    var x: CGFloat = -geo.size.height
+                    while x < geo.size.width + geo.size.height {
+                        path.move(to: CGPoint(x: x, y: 0))
+                        path.addLine(to: CGPoint(x: x + geo.size.height, y: geo.size.height))
+                        x += step
+                    }
+                }
+                .stroke(Color.white.opacity(0.10), lineWidth: 12)
+            }
+            Circle().fill(Color(hex: 0x8E84F0).opacity(0.45)).frame(width: 320, height: 320)
+                .blur(radius: 8)
+                .offset(x: 200, y: -220)
+            Circle().fill(Color(hex: 0x16A37F).opacity(0.35)).frame(width: 260, height: 260)
+                .blur(radius: 6)
+                .offset(x: -220, y: 260)
+        }
+        .clipped()
     }
 }

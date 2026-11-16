@@ -89,7 +89,7 @@ struct FloatingRail: View {
         .frame(maxHeight: .infinity)
         .background {
             if #available(macOS 26, *) {
-                Color.clear
+                EmptyView()
             } else {
                 RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .fill(Brand.cardFill)
@@ -103,7 +103,7 @@ struct FloatingRail: View {
                     .strokeBorder(Brand.hairline, lineWidth: 1)
             }
         }
-        .regularGlass(in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .liquidGlassPanel(in: RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 
     private func select(_ pane: Pane) {

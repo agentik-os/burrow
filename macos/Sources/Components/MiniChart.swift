@@ -75,7 +75,7 @@ struct MiniChart: View {
                 p.move(to: first)
                 for pt in pts.dropFirst() { p.addLine(to: pt) }
             }
-            .stroke(color, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
+            .stroke(color, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
         }
     }
 
@@ -158,7 +158,7 @@ struct DualMiniChart: View {
                     p.move(to: first)
                     for pt in pts.dropFirst() { p.addLine(to: pt) }
                 }
-                .stroke(color, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
+                .stroke(color, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
             }
         }
     }

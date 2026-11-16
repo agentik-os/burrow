@@ -56,15 +56,15 @@ struct ValueTile: View {
                     if let c = chip { Chip(text: c.0, color: c.1) }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(value).font(Brand.mono(30, .semibold)).foregroundStyle(Brand.textPrimary)
+                    Text(value).font(Brand.mono(30, .semibold)).foregroundStyle(.primary)
                     if !unit.isEmpty {
-                        Text(unit).font(Brand.mono(13)).foregroundStyle(Brand.textSecondary)
+                        Text(unit).font(Brand.mono(13)).foregroundStyle(.secondary)
                     }
                 }
                 chart.frame(height: 34)
                 Spacer(minLength: 0)
                 if let f = footnote {
-                    Text(f).font(Brand.mono(10)).foregroundStyle(Brand.textTertiary).lineLimit(1)
+                    Text(f).font(Brand.mono(10)).foregroundStyle(.tertiary).lineLimit(1)
                 }
             }
         }
@@ -78,19 +78,19 @@ struct ValueTile: View {
                 if let c = chip { Chip(text: c.0, color: c.1) }
             }
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(value).font(Brand.mono(15, .semibold)).foregroundStyle(Brand.textPrimary)
-                if !unit.isEmpty { Text(unit).font(Brand.mono(9)).foregroundStyle(Brand.textSecondary) }
+                Text(value).font(Brand.mono(15, .semibold)).foregroundStyle(.primary)
+                if !unit.isEmpty { Text(unit).font(Brand.mono(9)).foregroundStyle(.secondary) }
             }
             chart.frame(height: 13)
             if let f = footnote {
-                Text(f).font(Brand.mono(8.5)).foregroundStyle(Brand.textTertiary).lineLimit(1)
+                Text(f).font(Brand.mono(8.5)).foregroundStyle(.tertiary).lineLimit(1)
             }
         }
         .padding(8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        // Borderless — matches GlassCard on the main window (fill + whisper of
-        // elevation, no ruled box). The HUD used to outline every tile.
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Brand.cardFill))
+        // Denser fill on the HUD so titles / footnotes clear WCAG AA over
+        // wallpaper sampled by Regular Liquid Glass.
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(LiquidGlassMaterials.cardFill))
         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
     }
 }
