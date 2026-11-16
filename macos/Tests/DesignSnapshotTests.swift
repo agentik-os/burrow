@@ -2,9 +2,10 @@
 //  DesignSnapshotTests.swift
 //  BurrowTests
 //
-//  Offscreen renders of the redesigned shell, written only when
-//  BURROW_SNAPSHOT_DIR is set (the macOS app workflow). Absent that
-//  variable the test skips, so the normal suite stays hermetic.
+//  Offscreen renders of the redesigned shell. The macOS app workflow
+//  drops a sentinel next to this file before running the test, because
+//  xcodebuild does not forward shell environment variables into XCTest.
+//  Without the sentinel the test skips, so the normal suite stays hermetic.
 //
 
 import AppKit
@@ -35,10 +36,16 @@ final class DesignSnapshotTests: XCTestCase {
     }
 
     func testWriteSnapshotsWhenRequested() throws {
-        guard let raw = ProcessInfo.processInfo.environment["BURROW_SNAPSHOT_DIR"], !raw.isEmpty else {
-            throw XCTSkip("BURROW_SNAPSHOT_DIR is unset")
+        let testsDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        let sentinel = testsDir.appendingPathComponent(".write-ui-snapshots")
+        let envDir = ProcessInfo.processInfo.environment["BURROW_SNAPSHOT_DIR"]
+        let requested = FileManager.default.fileExists(atPath: sentinel.path)
+            || (envDir?.isEmpty == false)
+        guard requested else {
+            throw XCTSkip("UI snapshots were not requested")
         }
-        let dir = URL(fileURLWithPath: raw, isDirectory: true)
+        let dir = envDir.flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0, isDirectory: true) }
+            ?? testsDir.appendingPathComponent("ui-snapshots")
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
         let size = CGSize(width: 1040, height: 700)
