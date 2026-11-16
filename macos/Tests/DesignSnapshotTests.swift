@@ -52,9 +52,9 @@ final class DesignSnapshotTests: XCTestCase {
         let monitor = CGSize(width: 1100, height: 760)
         try write(MonitorChartsPreview(), name: "after-monitor-light", scheme: .light, dir: dir, size: monitor)
         try write(MonitorChartsPreview(), name: "after-monitor-dark", scheme: .dark, dir: dir, size: monitor)
-        let pop = CGSize(width: 380, height: 720)
-        try write(PopoverPreview(), name: "after-popover-light", scheme: .light, dir: dir, size: pop)
-        try write(PopoverPreview(), name: "after-popover-dark", scheme: .dark, dir: dir, size: pop)
+        let pop = CGSize(width: 760, height: 980)
+        try write(PopoverParity(), name: "parity-popover-light", scheme: .light, dir: dir, size: pop)
+        try write(PopoverParity(), name: "parity-popover-dark", scheme: .dark, dir: dir, size: pop)
         let history = CGSize(width: 880, height: 420)
         try write(HistoryChartPreview(), name: "after-history-light", scheme: .light, dir: dir, size: history)
         try write(HistoryChartPreview(), name: "after-history-dark", scheme: .dark, dir: dir, size: history)
@@ -241,73 +241,213 @@ private struct MonitorChartsPreview: View {
 }
 
 /// Menu-bar popover chrome: glass tiles, sparklines, thin ring, circular actions.
-private struct PopoverPreview: View {
+/// Same fields on both sides. Left is the upstream field list; right is the restyled HUD.
+private struct PopoverParity: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                BurrowMark().frame(width: 18, height: 18)
-                Text("100").font(Brand.mono(16, .semibold)).foregroundStyle(Brand.textPrimary)
-                Text("Excellent").font(Brand.sans(12)).foregroundStyle(Brand.textSecondary)
-                Spacer()
-                Text("1.67 TB free").font(Brand.sans(11)).foregroundStyle(Brand.textTertiary)
-            }
-            GlassGroup(spacing: 8) {
-                LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
-                    ValueTile(variant: .hud, eyebrow: "CPU", glyph: "cpu", accent: Brand.accent,
-                              value: "20", unit: "%", values: ChartFixture.cpu, domain: .percent, footnote: "load 6.70")
-                    ValueTile(variant: .hud, eyebrow: "GPU", glyph: "cpu.fill", accent: Brand.accent,
-                              value: "45", unit: "%", values: ChartFixture.gpu, domain: .percent, footnote: "M5 Max")
-                    ValueTile(variant: .hud, eyebrow: "Memory", glyph: "memorychip", accent: Brand.accent,
-                              value: "49", unit: "%", values: ChartFixture.mem, domain: .percent, footnote: "31.3 / 64 GB")
-                    ValueTile(variant: .hud, eyebrow: "Network", glyph: "network", accent: Brand.accent,
-                              value: "76.3", unit: "MB/s", values: ChartFixture.net, footnote: "en0")
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Upstream fields").font(Brand.sans(12, .semibold)).foregroundStyle(Brand.textPrimary)
+                ForEach(ParityFields.all, id: \.self) { field in
+                    Text(field).font(Brand.sans(10)).foregroundStyle(Brand.textSecondary)
                 }
+            }
+            .frame(width: 220, alignment: .leading)
+            FullPopoverPreview().frame(width: 360)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color(hex: 0x141414))
+        .environment(\.colorScheme, .dark)
+    }
+}
+
+private enum ParityFields {
+    static let all = [
+        "Score 100 · Excellent · 1.67 TB free",
+        "M5 Max · 64.0 GB · macOS 27.2.1 · up 3h 19m",
+        "CPU 20% · 65°C · load 6.70",
+        "GPU 45% · 63°C · M5 Max",
+        "Memory 49% · pressure 18% · 31.3/64 GB · swap 0.0 GB",
+        "Disk 1.67 TB free · 1.8 TB · 150.5 GB used · 8%",
+        "Network 76.3 MB/s · en0 · ↓ 75190 ↑ 2912 KB/s",
+        "Fan 1,489 RPM · 2 fans · macOS manages speed",
+        "Battery 100% · 0:00 · 1 cyc · 100% Health · ring",
+        "Top drain — Cursor · avg 85% CPU",
+        "Processes: name · CPU% · memory · menu",
+        "Stay Awake · Wipe · Eject",
+        "Clean Watch 3.09 GB · 0 uninstalled · 1 optimized",
+        "Tool grid: all 10 tools",
+        "History · Settings · Open Burrow · Power",
+        "MCP · 127.0.0.1:9277 + stdio",
+    ]
+}
+
+private struct FullPopoverPreview: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            HStack(spacing: 8) {
+                Image(systemName: "checkmark.seal.fill").foregroundStyle(Brand.green)
+                Text("100").font(Brand.mono(16, .semibold)).foregroundStyle(Brand.textPrimary)
+                Text("Excellent").font(Brand.sans(11)).foregroundStyle(Brand.textSecondary).lineLimit(1)
+                Spacer(minLength: 4)
+                Text("1.67 TB free").font(Brand.mono(10)).foregroundStyle(Brand.textTertiary)
+            }
+            HStack(spacing: 5) {
+                Chip(text: "M5 Max", color: Brand.textSecondary)
+                Chip(text: "64.0 GB", color: Brand.textSecondary)
+                Chip(text: "macOS 27.2.1", color: Brand.textSecondary)
+                Chip(text: "up 3h 19m", color: Brand.textSecondary)
+            }
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                ValueTile(variant: .hud, eyebrow: "CPU", glyph: "cpu", accent: Brand.green,
+                          value: "20", unit: "%", chip: ("65°C", Brand.orange),
+                          values: ChartFixture.cpu, domain: .percent, footnote: "load 6.70")
+                ValueTile(variant: .hud, eyebrow: "GPU", glyph: "cpu.fill", accent: Brand.orange,
+                          value: "45", unit: "%", chip: ("63°C", Brand.orange),
+                          values: ChartFixture.gpu, domain: .percent, footnote: "M5 Max")
+                ValueTile(variant: .hud, eyebrow: "Memory", glyph: "memorychip", accent: Brand.green,
+                          value: "49", unit: "%", chip: ("18%", Brand.green),
+                          values: ChartFixture.mem, domain: .percent, footnote: "31.3/64 GB · swap 0.0 GB")
+                hudDisk
+                ValueTile(variant: .hud, eyebrow: "Network", glyph: "network", accent: Brand.green,
+                          value: "76.3", unit: "MB/s", chip: ("en0", Brand.blue),
+                          values: ChartFixture.net, domain: .fromZero, footnote: "↓ 75190 ↑ 2912 KB/s")
+                hudFan
+            }
+            battery
+            processes
+            HStack(spacing: 6) {
+                action("cup.and.saucer.fill", "Stay Awake")
+                action("rectangle.inset.filled", "Wipe")
+                action("eject.fill", "Eject")
+            }
+            HStack {
+                Eyebrow(text: "Clean Watch", glyph: "sparkles", color: Tool.clean.accent)
+                Spacer()
+                Text("3.09 GB cleaned · 0 uninstalled · 1 optimized")
+                    .font(Brand.mono(9)).foregroundStyle(Brand.textSecondary)
+            }
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 5), spacing: 6) {
+                ForEach(Tool.navOrder) { tool in
+                    Image(systemName: tool.glyph)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(tool.accent)
+                        .frame(maxWidth: .infinity, minHeight: 26)
+                        .glassTile(corner: 13)
+                        .help(tool.title)
+                }
+            }
+            HStack {
+                Image(systemName: "clock.arrow.circlepath").foregroundStyle(Brand.textSecondary)
+                Image(systemName: "gearshape").foregroundStyle(Brand.textSecondary)
+                Spacer()
+                Text("Open Burrow").font(Brand.sans(11, .semibold)).foregroundStyle(Brand.textPrimary)
+                Image(systemName: "power").foregroundStyle(Brand.textSecondary)
+            }
+            Text("MCP · 127.0.0.1:9277 + stdio").font(Brand.mono(9)).foregroundStyle(Brand.textTertiary)
+        }
+        .padding(13)
+        .background { PopupGlassStandIn() }
+        .environment(\.colorScheme, .dark)
+    }
+
+    private var hudDisk: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack {
+                Eyebrow(text: "Disk", glyph: "internaldrive", color: Brand.blue)
+                Spacer()
+                Chip(text: "1.8 TB", color: Brand.textSecondary)
+            }
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text("1.67 TB").font(Brand.mono(15, .semibold)).foregroundStyle(Brand.textPrimary)
+                Text("free").font(Brand.mono(9)).foregroundStyle(Brand.textSecondary)
+            }
+            LowSpaceBar(fraction: 0.08)
+            Text("150.5 GB used · 8%").font(Brand.mono(8.5)).foregroundStyle(Brand.textTertiary)
+        }
+        .padding(8).glassTile(corner: 12)
+    }
+
+    private var hudFan: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack {
+                Eyebrow(text: "Fan", glyph: "fan", color: Brand.textSecondary)
+                Spacer()
+                Chip(text: "2 fans", color: Brand.textSecondary)
+            }
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text("1,489").font(Brand.mono(15, .semibold)).foregroundStyle(Brand.textPrimary)
+                Text("RPM").font(Brand.mono(9)).foregroundStyle(Brand.textSecondary)
+            }
+            MiniChart(values: ChartFixture.net, color: Brand.textSecondary, domain: .fromZero, allowsFlat: true)
+                .frame(height: 16)
+            Text("macOS manages speed").font(Brand.mono(8.5)).foregroundStyle(Brand.textTertiary)
+        }
+        .padding(8).glassTile(corner: 12)
+    }
+
+    private var battery: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Eyebrow(text: "Battery", glyph: "battery.100", color: Brand.green)
+                Spacer()
+                Chip(text: "100% Health", color: Brand.green)
             }
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Eyebrow(text: "Battery", glyph: "battery.100")
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text("100").font(Brand.mono(18, .semibold)).foregroundStyle(Brand.textPrimary)
-                        Text("%").font(Brand.sans(11)).foregroundStyle(Brand.textSecondary)
+                        Text("100%").font(Brand.mono(16, .semibold)).foregroundStyle(Brand.textPrimary)
+                        Text("0:00").font(Brand.mono(10)).foregroundStyle(Brand.textSecondary)
                     }
-                    Text("1 cycle").font(Brand.sans(11)).foregroundStyle(Brand.textTertiary)
+                    Text("1 cyc").font(Brand.mono(9)).foregroundStyle(Brand.textTertiary)
                 }
                 Spacer()
-                RingGauge(percent: 100, color: Brand.accent, glyph: "laptopcomputer", label: "Mac", size: 36)
+                RingGauge(percent: 100, color: Brand.green, glyph: "laptopcomputer", label: "Mac", size: 34)
             }
-            .padding(10)
-            .glassTile(corner: 12)
-            VStack(alignment: .leading, spacing: 0) {
-                Eyebrow(text: "Top processes", glyph: "list.bullet")
-                process("WindowServer", "18.2%", "490 MB")
-                Rectangle().fill(Brand.hairline).frame(height: 1)
-                process("Burrow", "4.1%", "210 MB")
-                Rectangle().fill(Brand.hairline).frame(height: 1)
-                process("Finder", "1.4%", "96 MB")
-            }
-            GlassGroup(spacing: 8) {
-                HStack(spacing: 8) {
-                    GlassCircleButton(systemName: "trash", helpText: "Clean") {}
-                    GlassCircleButton(systemName: "slider.horizontal.3", helpText: "Optimize") {}
-                    GlassCircleButton(systemName: "chart.pie", helpText: "Analyze") {}
-                    GlassCircleButton(systemName: "wifi", helpText: "Network") {}
-                    Spacer()
-                }
-            }
+            Text("Top drain — Cursor · avg 85% CPU over the last hour")
+                .font(Brand.mono(9)).foregroundStyle(Brand.textSecondary).lineLimit(1)
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(.ultraThinMaterial)
+        .padding(10).glassTile(corner: 12)
     }
 
-    private func process(_ name: String, _ cpu: String, _ mem: String) -> some View {
-        HStack {
-            Text(name).font(Brand.sans(12)).foregroundStyle(Brand.textPrimary)
-            Spacer()
-            Text(cpu).font(Brand.mono(11)).foregroundStyle(Brand.textSecondary)
-            Text(mem).font(Brand.mono(11)).foregroundStyle(Brand.textTertiary).frame(width: 64, alignment: .trailing)
+    private var processes: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Eyebrow(text: "Top processes", glyph: "list.bullet", color: Brand.textSecondary)
+            row("WindowServer", "78.9%", "490.2 MB", hot: true)
+            row("Grok", "25.2%", "516.4 MB", hot: false)
+            row("Grok", "17.7%", "107.6 MB", hot: false)
+            row("com.apple.WebKit.WebContent", "17.6%", "799.5 MB", hot: false)
         }
-        .padding(.vertical, 6)
+    }
+
+    private func row(_ name: String, _ cpu: String, _ mem: String, hot: Bool) -> some View {
+        HStack(spacing: 8) {
+            Text(name).font(Brand.sans(11)).foregroundStyle(Brand.textPrimary).lineLimit(1)
+            Spacer()
+            Text(cpu).font(Brand.mono(10)).foregroundStyle(hot ? Brand.orange : Brand.textSecondary)
+            Text(mem).font(Brand.mono(10)).foregroundStyle(Brand.textTertiary).frame(width: 64, alignment: .trailing)
+            Image(systemName: "ellipsis").font(.system(size: 10)).foregroundStyle(Brand.textTertiary)
+        }
+    }
+
+    private func action(_ glyph: String, _ title: String) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: glyph).font(.system(size: 10, weight: .medium))
+            Text(title).font(Brand.sans(11, .medium))
+        }
+        .foregroundStyle(Brand.textSecondary)
+        .padding(.horizontal, 9).padding(.vertical, 5)
+        .glassTile(corner: 14)
+    }
+}
+
+private struct PopupGlassStandIn: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .fill(Color(hex: 0x171717).opacity(0.92))
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.16), lineWidth: 0.7))
     }
 }
 

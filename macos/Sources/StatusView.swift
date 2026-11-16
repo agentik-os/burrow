@@ -97,17 +97,17 @@ struct StatusView: View {
         let free = m.available ?? (m.total > m.used ? m.total - m.used : 0)
         return HStack(alignment: .center, spacing: 22) {
             HStack(spacing: 6) {
-                Image(systemName: "memorychip").font(.system(size: Brand.scaled(12))).foregroundStyle(Brand.textSecondary)
+                Image(systemName: "memorychip").font(.system(size: Brand.scaled(12))).foregroundStyle(MemoryPressure.tint(percent: MemoryPressure.percent()))
                 Text(NSLocalizedString("Memory", comment: "")).font(Brand.sans(12, .medium)).foregroundStyle(Brand.textSecondary)
             }
-            memStat(NSLocalizedString("Used", comment: ""), String(format: "%.1f GB", Fmt.gib(m.used)), Brand.textPrimary)
+            memStat(NSLocalizedString("Used", comment: ""), String(format: "%.1f GB", Fmt.gib(m.used)), MemoryPressure.tint(percent: MemoryPressure.percent()))
             memStat(NSLocalizedString("Free", comment: ""), String(format: "%.1f GB", Fmt.gib(free)), Brand.textPrimary)
             if let c = m.cached, c > 0 {
                 memStat(NSLocalizedString("Cached", comment: ""), String(format: "%.1f GB", Fmt.gib(c)), Brand.textPrimary)
             }
             memStat(NSLocalizedString("Swap", comment: ""),
                     String(format: "%.1f / %.0f GB", Fmt.gib(m.swapUsed), Fmt.gib(m.swapTotal)),
-                    Brand.textPrimary)
+                    m.swapUsed > 0 ? MemoryPressure.tint(percent: MemoryPressure.percent()) : Brand.textPrimary)
             Spacer(minLength: 0)
         }
         .padding(14)
@@ -132,7 +132,7 @@ struct StatusView: View {
             chip = (String(format: NSLocalizedString("%d cores", comment: ""), s.cpu.coreCount), Brand.textSecondary)
         }
         return ValueTile(
-            eyebrow: "CPU", glyph: "cpu", accent: Brand.accent,
+            eyebrow: "CPU", glyph: "cpu", accent: Brand.green,
             value: String(format: "%.1f", s.cpu.usage), unit: "%",
             chip: chip, values: model.cpuHist, chartStyle: .area, domain: .percent,
             footnote: String(format: NSLocalizedString("load %.2f · %.2f · %.2f", comment: ""), s.cpu.load1, s.cpu.load5, s.cpu.load15))
@@ -144,9 +144,9 @@ struct StatusView: View {
         let used = Fmt.gib(m.used)
         let total = Fmt.gib(m.total)
         return ValueTile(
-            eyebrow: "Memory", glyph: "memorychip", accent: Brand.accent,
+            eyebrow: "Memory", glyph: "memorychip", accent: MemoryPressure.tint(percent: lvl),
             value: String(format: "%.0f", m.usedPercent), unit: "%",
-            chip: (String(format: NSLocalizedString("%d%%", comment: ""), lvl), Brand.textSecondary),
+            chip: (String(format: NSLocalizedString("%d%%", comment: ""), lvl), MemoryPressure.tint(percent: lvl)),
             values: model.memHist, chartStyle: .area, domain: .percent,
             footnote: String(format: NSLocalizedString("%.1f / %.1f GB · swap %.1f GB", comment: ""), used, total, Fmt.gib(m.swapUsed)))
     }
@@ -161,7 +161,7 @@ struct StatusView: View {
         var chip: (String, Color)? = nil
         if let t = s.thermal?.gpuTemp, t > 0 { chip = (String(format: "%.0f°C", t), Brand.orange) }
         return ValueTile(
-            eyebrow: "GPU", glyph: "cpu.fill", accent: Brand.accent,
+            eyebrow: "GPU", glyph: "cpu.fill", accent: Brand.orange,
             value: hasUsage ? String(format: "%.0f", g!.usage) : "—",
             unit: hasUsage ? "%" : "",
             chip: chip, values: model.gpuHist, chartStyle: .area, domain: .percent,
@@ -197,7 +197,7 @@ struct StatusView: View {
                             Text("Idle").font(Brand.sans(11)).foregroundStyle(Brand.textTertiary).padding(.leading, 4)
                         }
                     }
-                    MiniChart(values: model.fanHist, color: Brand.accent, style: .area, domain: .fromZero, allowsFlat: true)
+                    MiniChart(values: model.fanHist, color: PowerAccent.fan, style: .area, domain: .fromZero, allowsFlat: true)
                         .frame(height: 40)
                 } else {
                     Text("—").font(Brand.mono(30, .semibold)).foregroundStyle(Brand.textTertiary)
@@ -254,7 +254,7 @@ struct LiveNetCard: View {
             eyebrow: "Network", glyph: "network", accent: Brand.green,
             value: value, unit: unit, chip: chip,
             values: [], domain: .fromZero,
-            dual: (down: rxHist, up: txHist, downColor: Brand.accent, upColor: Brand.accent.opacity(0.45)),
+            dual: (down: rxHist, up: txHist, downColor: Brand.green, upColor: Brand.blue),
             footnote: "↓ \(Fmt.rate(rx))  ↑ \(Fmt.rate(tx)) · \(snapNet?.name ?? "—") · \(snapNet?.ip ?? "—")")
     }
 }

@@ -46,26 +46,42 @@ enum Tool: String, CaseIterable, Identifiable {
 
     var glyph: String {
         switch self {
-        case .clean:     return "trash"
-        case .purge:     return "folder"
-        case .installer: return "arrow.down.circle"
-        case .apps:      return "square.grid.2x2"
-        case .optimize:  return "slider.horizontal.3"
-        case .analyze:   return "chart.pie"
+        case .clean:     return "sparkles"
+        case .purge:     return "folder.badge.minus"
+        case .installer: return "arrow.down.app"
+        case .apps:      return "shippingbox"
+        case .optimize:  return "wand.and.stars"
+        case .analyze:   return "square.grid.2x2"
         case .dupes:     return "doc.on.doc"
-        case .orphans:   return "tray"
-        case .photos:    return "photo"
-        case .status:    return "waveform.path"
+        case .orphans:   return "externaldrive.badge.questionmark"
+        case .photos:    return "photo.on.rectangle.angled"
+        case .status:    return "waveform.path.ecg"
         case .ports:     return "network"
         case .net:       return "arrow.up.arrow.down"
         case .connectivity: return "wifi"
-        case .tuneup:    return "wrench.and.screwdriver"
+        case .tuneup:    return "slider.horizontal.3"
         }
     }
 
-    /// Tools share one ink. Status colour (success, warning, danger) lives
-    /// on `Brand`, not on the tool, so navigation stays monochrome.
-    var accent: Color { Brand.textPrimary }
+    /// Each tool keeps its own colour so the menu-bar grid stays identifiable.
+    var accent: Color {
+        switch self {
+        case .clean:     return Color(hex: 0x35C2A5)
+        case .purge:     return Color(hex: 0x6FB06A)
+        case .installer: return Color(hex: 0xD98C5F)
+        case .apps:      return Color(hex: 0xF0714E)
+        case .optimize:  return Color(hex: 0x8E84F0)
+        case .analyze:   return Color(hex: 0x4FA3E3)
+        case .dupes:     return Color(hex: 0xDB7E9C)
+        case .orphans:   return Color(hex: 0xB7BE5A)
+        case .photos:    return Color(hex: 0xD57BC4)
+        case .status:    return Color(hex: 0xE6A93C)
+        case .ports:     return Color(hex: 0xB58BD6)
+        case .net:       return Color(hex: 0x6E8FE0)
+        case .connectivity: return Color(hex: 0x4FC3D9)
+        case .tuneup:    return Color(hex: 0x5AA98B)
+        }
+    }
 
     /// Our own one-liner per tool — earthy, in keeping with the name.
     var tagline: String {

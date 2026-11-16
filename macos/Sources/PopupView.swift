@@ -60,7 +60,7 @@ struct PopupView: View {
         // Which sections appear is user-customizable (issue #82); read once per
         // body eval, so a Settings change shows on the next popover open.
         let sections = Store.popupSections
-        return VStack(alignment: .leading, spacing: 10) {
+        return VStack(alignment: .leading, spacing: 9) {
             if let s = model.snap {
                 if sections.contains(.header) { header(s) }
                 if sections.contains(.chips) { chipsRow(s) }
@@ -89,7 +89,7 @@ struct PopupView: View {
                 footer
             }
         }
-        .padding(14)
+        .padding(13)
         // Width tracks the interface text scale (issue #407) so larger type
         // keeps roughly the same line lengths instead of wrapping everywhere.
         // HUDController sizes the popover from the same number.
@@ -117,9 +117,9 @@ struct PopupView: View {
         Button { open(.home) } label: {
             HStack(spacing: 8) {
                 Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: Brand.scaled(13))).foregroundStyle(Brand.textSecondary)
-                Text("\(s.healthScore)").font(Brand.mono(18, .semibold)).foregroundStyle(Brand.textPrimary)
-                Text(headline(s)).font(Brand.sans(12)).foregroundStyle(Brand.textSecondary)
+                    .font(.system(size: Brand.scaled(13))).foregroundStyle(HealthRating.color(s.healthScore))
+                Text("\(s.healthScore)").font(Brand.mono(16, .semibold)).foregroundStyle(Brand.textPrimary)
+                Text(headline(s)).font(Brand.sans(11)).foregroundStyle(Brand.textSecondary)
                     .lineLimit(1).truncationMode(.tail)
                 Spacer(minLength: 6)
                 // Render the free-space line unconditionally (empty string when
@@ -131,7 +131,7 @@ struct PopupView: View {
                 // EXC_BAD_ACCESS (Sentry BURROW-9A, same class as the BURROW-K
                 // popover fault).
                 Text(freeSpace(s))
-                    .font(Brand.sans(12)).foregroundStyle(Brand.textTertiary)
+                    .font(Brand.mono(10)).foregroundStyle(Brand.textTertiary)
                 Image(systemName: "chevron.right").font(.system(size: Brand.scaled(9), weight: .semibold))
                     .foregroundStyle(Brand.textTertiary)
             }
@@ -196,10 +196,10 @@ struct PopupView: View {
     private var activitySection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                Eyebrow(text: "Activity", glyph: "bolt.fill", color: Brand.textSecondary)
+                Eyebrow(text: "Activity", glyph: "bolt.fill", color: Brand.gold)
                 Spacer()
                 if runningCount > 0 {
-                    Text("\(runningCount) running").font(Brand.sans(11, .medium)).foregroundStyle(Brand.textSecondary)
+                    Text("\(runningCount) running").font(Brand.mono(9, .medium)).foregroundStyle(Brand.gold)
                 }
             }
             ForEach(ops.ops) { op in opRow(op) }
@@ -297,21 +297,21 @@ struct PopupView: View {
         let tiles = Store.popupTiles   // which tiles the user wants (issue #82)
         return GlassGroup(spacing: 8) { LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
             if tiles.contains(.cpu) {
-                ValueTile(variant: .hud, eyebrow: "CPU", glyph: "cpu", accent: Brand.accent,
+                ValueTile(variant: .hud, eyebrow: "CPU", glyph: "cpu", accent: Brand.green,
                           value: String(format: "%.0f", s.cpu.usage), unit: "%",
-                          chip: (s.thermal?.cpuTemp).flatMap { $0 > 0 ? (String(format: "%.0f°C", $0), Brand.amber) : nil },
+                          chip: (s.thermal?.cpuTemp).flatMap { $0 > 0 ? (String(format: "%.0f°C", $0), Brand.orange) : nil },
                           values: model.cpuHist, chartStyle: .area, domain: .percent,
                           footnote: String(format: "load %.2f", s.cpu.load1))
             }
             if tiles.contains(.gpu) {
-                ValueTile(variant: .hud, eyebrow: "GPU", glyph: "cpu.fill", accent: Brand.accent,
+                ValueTile(variant: .hud, eyebrow: "GPU", glyph: "cpu.fill", accent: Brand.orange,
                           value: gpuValue(s).0, unit: gpuValue(s).1,
-                          chip: (s.thermal?.gpuTemp).flatMap { $0 > 0 ? (String(format: "%.0f°C", $0), Brand.amber) : nil },
+                          chip: (s.thermal?.gpuTemp).flatMap { $0 > 0 ? (String(format: "%.0f°C", $0), Brand.orange) : nil },
                           values: model.gpuHist, chartStyle: .area, domain: .percent,
                           footnote: (s.gpu?.first?.name ?? "GPU").replacingOccurrences(of: "Apple ", with: ""))
             }
             if tiles.contains(.memory) {
-                ValueTile(variant: .hud, eyebrow: "Memory", glyph: "memorychip", accent: Brand.accent,
+                ValueTile(variant: .hud, eyebrow: "Memory", glyph: "memorychip", accent: MemoryPressure.tint(percent: MemoryPressure.percent()),
                           value: String(format: "%.0f", s.memory.usedPercent), unit: "%",
                           chip: memChip(s),
                           values: model.memHist, chartStyle: .area, domain: .percent,
@@ -320,9 +320,9 @@ struct PopupView: View {
             }
             if tiles.contains(.diskUsage) { diskTile(s) }
             if tiles.contains(.network) {
-                ValueTile(variant: .hud, eyebrow: "Network", glyph: "network", accent: Brand.accent,
+                ValueTile(variant: .hud, eyebrow: "Network", glyph: "network", accent: Brand.green,
                           value: netValue(s).0, unit: netValue(s).1,
-                          chip: (s.network.first(where: { !$0.ip.isEmpty })?.name).map { ($0, Brand.textSecondary) },
+                          chip: (s.network.first(where: { !$0.ip.isEmpty })?.name).map { ($0, Brand.blue) },
                           values: model.netHist, chartStyle: .area,
                           footnote: netFoot(s))
             }
@@ -337,20 +337,20 @@ struct PopupView: View {
         let pct = disk?.usedPercent ?? 0
         return VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 4) {
-                Eyebrow(text: "Disk", glyph: "internaldrive", color: Brand.textSecondary)
+                Eyebrow(text: "Disk", glyph: "internaldrive", color: Brand.blue)
                 Spacer(minLength: 2)
                 Chip(text: s.hardware.diskSize, color: Brand.textSecondary)
             }
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(Fmt.bytes(freeBytes)).font(Brand.mono(18, .semibold)).foregroundStyle(Brand.textPrimary)
-                Text("free").font(Brand.sans(11)).foregroundStyle(Brand.textSecondary)
+                Text(Fmt.bytes(freeBytes)).font(Brand.mono(15, .semibold)).foregroundStyle(Brand.textPrimary)
+                Text("free").font(Brand.mono(9)).foregroundStyle(Brand.textSecondary)
             }
             LowSpaceBar(fraction: pct / 100).frame(height: 4)
             Text(String(format: NSLocalizedString("%@ used · %.0f%%", comment: ""),
                         Fmt.bytes(Int64(disk?.used ?? 0)), pct))
-                .font(Brand.sans(10)).foregroundStyle(Brand.textTertiary).lineLimit(1)
+                .font(Brand.mono(8.5)).foregroundStyle(Brand.textTertiary).lineLimit(1)
         }
-        .padding(10)
+        .padding(8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassTile(corner: 12)
     }
@@ -364,24 +364,24 @@ struct PopupView: View {
         return VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 4) {
                 // Neutral on purpose — see PowerAccent (Format.swift).
-                Eyebrow(text: "Fan", glyph: "fan", color: Brand.textSecondary)
+                Eyebrow(text: "Fan", glyph: "fan", color: PowerAccent.fan)
                 Spacer(minLength: 2)
                 if fanCount > 0 {
                     Chip(text: String(format: NSLocalizedString("%d fans", comment: ""), fanCount), color: Brand.textSecondary)
                 }
             }
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(fanCount > 0 ? "\(rpm)" : "—").font(Brand.mono(18, .semibold)).foregroundStyle(Brand.textPrimary)
-                if fanCount > 0 { Text("RPM").font(Brand.sans(11)).foregroundStyle(Brand.textSecondary) }
+                Text(fanCount > 0 ? "\(rpm)" : "—").font(Brand.mono(15, .semibold)).foregroundStyle(Brand.textPrimary)
+                if fanCount > 0 { Text("RPM").font(Brand.mono(9)).foregroundStyle(Brand.textSecondary) }
             }
             if fanCount > 0 {
-                MiniChart(values: model.fanHist, color: Brand.accent, style: .area, allowsFlat: true).frame(height: 22)
+                MiniChart(values: model.fanHist, color: PowerAccent.fan, style: .area, domain: .fromZero, allowsFlat: true).frame(height: 16)
             }
             Text(fanCount > 0 ? NSLocalizedString("macOS manages speed", comment: "")
                               : NSLocalizedString("No fan data", comment: ""))
-                .font(Brand.sans(10)).foregroundStyle(Brand.textTertiary).lineLimit(1)
+                .font(Brand.mono(8.5)).foregroundStyle(Brand.textTertiary).lineLimit(1)
         }
-        .padding(10)
+        .padding(8)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .glassTile(corner: 12)
     }
@@ -414,29 +414,29 @@ struct PopupView: View {
                 HStack(spacing: 8) {
                     // Accent semantics live in PowerAccent (Format.swift):
                     // red = low, green = charging/full, amber = discharging.
-                    Eyebrow(text: "Battery", glyph: "battery.100", color: Brand.textSecondary)
+                    Eyebrow(text: "Battery", glyph: "battery.100",
+                            color: PowerAccent.battery(percent: b.percent, status: b.status))
                     Spacer()
                     Chip(text: String(format: NSLocalizedString("%d%% Health", comment: ""), b.capacity),
-                         color: Brand.textSecondary)
+                         color: b.health == "Good" ? Brand.green : Brand.gold)
                 }
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(alignment: .firstTextBaseline, spacing: 3) {
-                            Text(String(format: "%.0f", b.percent))
-                                .font(Brand.mono(22, .semibold)).foregroundStyle(Brand.textPrimary)
-                            Text("%").font(Brand.sans(12)).foregroundStyle(Brand.textSecondary)
+                            Text(String(format: "%.0f%%", b.percent))
+                                .font(Brand.mono(16, .semibold)).foregroundStyle(Brand.textPrimary)
                             if !b.timeLeft.isEmpty {
-                                Text(b.timeLeft).font(Brand.sans(11)).foregroundStyle(Brand.textSecondary)
+                                Text(b.timeLeft).font(Brand.mono(10)).foregroundStyle(Brand.textSecondary)
                             }
                         }
                         Text(batterySubline(b))
-                            .font(Brand.sans(11)).foregroundStyle(Brand.textTertiary)
+                            .font(Brand.mono(9)).foregroundStyle(Brand.textTertiary)
                     }
                     Spacer()
                     HStack(spacing: 8) {
                         RingGauge(percent: b.percent,
-                                  color: Brand.accent,
-                                  glyph: "laptopcomputer", label: NSLocalizedString("Mac", comment: ""), size: 36)
+                                  color: PowerAccent.battery(percent: b.percent, status: b.status),
+                                  glyph: "laptopcomputer", label: NSLocalizedString("Mac", comment: ""), size: 34)
                         ForEach(Array(bluetoothWithBattery(s).prefix(3).enumerated()), id: \.offset) { _, device in
                             RingGauge(percent: Double(device.batteryPercent ?? 0),
                                       color: PowerAccent.level(device.batteryPercent ?? 0),
@@ -486,10 +486,10 @@ struct PopupView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 4))
                     Text(p.name).font(Brand.sans(12)).foregroundStyle(Brand.textPrimary).lineLimit(1)
                     Spacer(minLength: 6)
-                    Text(String(format: "%.1f%%", p.cpu)).font(Brand.mono(11))
-                        .foregroundStyle(p.cpu > 50 ? Brand.amber : Brand.textSecondary)
-                    Text(memText(p)).font(Brand.mono(11)).foregroundStyle(Brand.textTertiary)
-                        .frame(width: 56, alignment: .trailing)
+                    Text(String(format: "%.1f%%", p.cpu)).font(Brand.mono(10))
+                        .foregroundStyle(p.cpu > 30 ? Brand.orange : Brand.textSecondary)
+                    Text(memText(p)).font(Brand.mono(10)).foregroundStyle(Brand.textTertiary)
+                        .frame(width: 52, alignment: .trailing)
                     procMenu(p)
                 }
                 .padding(.vertical, 3)
@@ -583,11 +583,11 @@ struct PopupView: View {
     private func utilityButton(glyph: String, label: String, active: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 5) {
-                Image(systemName: glyph).font(.system(size: Brand.scaled(11), weight: .medium))
+                Image(systemName: glyph).font(.system(size: Brand.scaled(10), weight: .medium))
                 Text(label).font(Brand.sans(11, .medium))
             }
-            .foregroundStyle(active ? Brand.textPrimary : Brand.textSecondary)
-            .padding(.horizontal, 10).padding(.vertical, 6)
+            .foregroundStyle(active ? Brand.gold : Brand.textSecondary)
+            .padding(.horizontal, 9).padding(.vertical, 5)
             .glassTile(corner: 14)
         }
         .buttonStyle(.plain)
@@ -604,7 +604,7 @@ struct PopupView: View {
             // read as "you never cleaned".
             if let totals = model.cleanWatch, !totals.isEmpty {
                 HStack(spacing: 10) {
-                    Eyebrow(text: "Clean Watch", glyph: "sparkles", color: Brand.textSecondary)
+                    Eyebrow(text: "Clean Watch", glyph: "sparkles", color: Tool.clean.accent)
                     Spacer()
                     Text(String(format: NSLocalizedString("%@ cleaned · %d uninstalled · %d optimized", comment: ""),
                                 Fmt.bytes(totals.cleanedBytes), totals.uninstalledApps, totals.optimizeRuns))
@@ -617,16 +617,22 @@ struct PopupView: View {
             // ~36 px ≈ 360 > ~308 usable), which bled past the frame and read as
             // the popover being shifted left. A flexible grid wraps to as many
             // rows as needed and always fits the width — add more tools freely.
-            GlassGroup(spacing: 8) {
+            GlassGroup(spacing: 6) {
                 LazyVGrid(
-                    columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 5),
-                    spacing: 8
+                    columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 5),
+                    spacing: 6
                 ) {
                     ForEach(Tool.navOrder) { tool in
-                        GlassCircleButton(systemName: tool.glyph, helpText: tool.title) {
-                            open(.tool(tool))
+                        Button { open(.tool(tool)) } label: {
+                            Image(systemName: tool.glyph)
+                                .font(.system(size: Brand.scaled(12), weight: .medium))
+                                .foregroundStyle(tool.accent)
+                                .frame(maxWidth: .infinity, minHeight: 26)
+                                .glassTile(corner: 13)
                         }
-                        .frame(maxWidth: .infinity)
+                        .buttonStyle(.plain)
+                        .help(tool.title)
+                        .accessibilityLabel(tool.title)
                     }
                 }
             }

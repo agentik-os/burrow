@@ -52,7 +52,7 @@ struct ValueTile: View {
         GlassCard(minHeight: minHeight) {
             VStack(alignment: .leading, spacing: 9) {
                 HStack(spacing: 6) {
-                    Eyebrow(text: eyebrow, glyph: glyph, color: Brand.textSecondary)
+                    Eyebrow(text: eyebrow, glyph: glyph, color: accent)
                     Spacer(minLength: 4)
                     if let c = chip { Chip(text: c.0, color: c.1) }
                 }
@@ -62,7 +62,7 @@ struct ValueTile: View {
                         Text(unit).font(Brand.sans(13)).foregroundStyle(Brand.textSecondary)
                     }
                 }
-                chart.frame(height: 40)
+                chart.frame(height: 34)
                 Spacer(minLength: 0)
                 if let f = footnote {
                     Text(f).font(Brand.sans(11)).foregroundStyle(Brand.textTertiary).lineLimit(1)
@@ -74,20 +74,20 @@ struct ValueTile: View {
     private var hud: some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 4) {
-                Eyebrow(text: eyebrow, glyph: glyph, color: Brand.textSecondary)
+                Eyebrow(text: eyebrow, glyph: glyph, color: accent)
                 Spacer(minLength: 2)
                 if let c = chip { Chip(text: c.0, color: c.1) }
             }
             HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(value).font(Brand.mono(18, .semibold)).foregroundStyle(Brand.textPrimary)
-                if !unit.isEmpty { Text(unit).font(Brand.sans(11)).foregroundStyle(Brand.textSecondary) }
+                Text(value).font(Brand.mono(15, .semibold)).foregroundStyle(Brand.textPrimary)
+                if !unit.isEmpty { Text(unit).font(Brand.mono(9)).foregroundStyle(Brand.textSecondary) }
             }
-            chart.frame(height: 22)
+            chart.frame(height: 16)
             if let f = footnote {
-                Text(f).font(Brand.sans(10)).foregroundStyle(Brand.textTertiary).lineLimit(1)
+                Text(f).font(Brand.mono(8.5)).foregroundStyle(Brand.textTertiary).lineLimit(1)
             }
         }
-        .padding(10)
+        .padding(8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassTile(corner: 12)
     }
