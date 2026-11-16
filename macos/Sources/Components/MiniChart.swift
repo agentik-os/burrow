@@ -195,12 +195,12 @@ enum ChartSmoothing {
         }
     }
 
-    static func downsample(_ values: [Double], to max: Int) -> [Double] {
-        guard values.count > max, max > 1 else { return values }
-        let step = Double(values.count) / Double(max)
-        return (0..<max).map { i in
+    static func downsample(_ values: [Double], to limit: Int) -> [Double] {
+        guard values.count > limit, limit > 1 else { return values }
+        let step = Double(values.count) / Double(limit)
+        return (0..<limit).map { i in
             let start = Int(Double(i) * step)
-            let end = min(values.count, max(start + 1, Int(Double(i + 1) * step)))
+            let end = min(values.count, Swift.max(start + 1, Int(Double(i + 1) * step)))
             return values[start..<end].max() ?? 0
         }
     }
