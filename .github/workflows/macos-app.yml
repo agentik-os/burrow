@@ -77,16 +77,18 @@ jobs:
 
       - name: Snapshot the redesigned UI
         continue-on-error: true
-        env:
-          BURROW_SNAPSHOT_DIR: ${{ runner.temp }}/ui-snapshots
         run: |
+          # xcodebuild does not forward arbitrary shell variables into the
+          # test runner. The TEST_RUNNER_ prefix is stripped and delivered.
+          mkdir -p "$RUNNER_TEMP/ui-snapshots"
           xcodebuild test -project Burrow.xcodeproj -scheme Burrow \
             -destination 'platform=macOS' \
             -derivedDataPath "$RUNNER_TEMP/dd" \
             -only-testing:BurrowTests/DesignSnapshotTests \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            TEST_RUNNER_BURROW_SNAPSHOT_DIR="$RUNNER_TEMP/ui-snapshots"
 
       - name: Upload UI snapshots
         if: always()
