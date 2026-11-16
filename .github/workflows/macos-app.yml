@@ -69,12 +69,21 @@ jobs:
 
       - name: Install Rust
         run: |
-          if ! command -v cargo >/dev/null 2>&1; then
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+          set -euo pipefail
+          if [ -f "$HOME/.cargo/env" ]; then
+            # shellcheck disable=SC1091
+            source "$HOME/.cargo/env"
           fi
-          source "$HOME/.cargo/env"
+          if ! command -v rustup >/dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+            source "$HOME/.cargo/env"
+          fi
           rustup target add aarch64-apple-darwin x86_64-apple-darwin
-          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          if [ -d "$HOME/.cargo/bin" ]; then
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          fi
+          cargo --version
+          rustup show
 
       - name: Build unsigned Burrow.app
         run: |
