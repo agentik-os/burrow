@@ -97,10 +97,15 @@ struct PopupView: View {
         // Warm tactile ground + grain, matching the main window — the HUD used
         // to ride bare popover material and read as unfinished beside it.
         .background {
-            Brand.windowVeil
-            Brand.ambientGlow
-            GrainOverlay()
+            if #available(macOS 26, *) {
+                Color.clear
+            } else {
+                Brand.windowVeil
+                Brand.ambientGlow
+                GrainOverlay()
+            }
         }
+        .regularGlass(in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .fixedSize(horizontal: false, vertical: true)
         // Three task-scoped subscriptions replace the old 1 s + 20 s timer
         // pair (issue #53): the snapshot and sparkline pumps are shared with

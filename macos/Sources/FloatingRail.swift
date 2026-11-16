@@ -87,14 +87,23 @@ struct FloatingRail: View {
         .padding(.bottom, RailMetrics.bottomPadding)
         .frame(width: RailMetrics.width)
         .frame(maxHeight: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Brand.cardFill)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(Brand.hairline, lineWidth: 1)
-        )
+        .background {
+            if #available(macOS 26, *) {
+                Color.clear
+            } else {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(Brand.cardFill)
+            }
+        }
+        .overlay {
+            if #available(macOS 26, *) {
+                EmptyView()
+            } else {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .strokeBorder(Brand.hairline, lineWidth: 1)
+            }
+        }
+        .regularGlass(in: RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 
     private func select(_ pane: Pane) {

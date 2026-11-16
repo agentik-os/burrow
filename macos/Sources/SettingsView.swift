@@ -176,6 +176,7 @@ struct SettingsView: View {
                     .frame(maxWidth: .infinity)
                 }
                 .scrollIndicators(.hidden)
+                .scrollEdgeGlass()
                 // A deep-linked section is often below the fold; the anchor
                 // only exists once the tab's content has laid out, so this
                 // waits a beat rather than scrolling to nothing.

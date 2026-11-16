@@ -36,6 +36,10 @@ DerivedData/
 # macOS junk
 .DS_Store
 
+# Offscreen UI renders from the macOS app workflow
+macos/Tests/ui-snapshots/
+macos/Tests/.write-ui-snapshots
+
 # Python test caches
 __pycache__/
 *.py[cod]
