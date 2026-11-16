@@ -35,9 +35,7 @@ struct HomeView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-                .padding(.horizontal, 18).padding(.top, 8).padding(.bottom, 10)
-            Rectangle().fill(Brand.hairline).frame(height: 1)
+            PaneHeader { header }
             content
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -57,32 +55,27 @@ struct HomeView: View {
     }
 
     private var segmented: some View {
-        HStack(spacing: 2) {
-            ForEach(Section.allCases) { s in
-                let on = s == section
-                Button { withAnimation(.easeOut(duration: 0.14)) { section = s } } label: {
-                    Text(NSLocalizedString(s.rawValue, comment: ""))
-                        .font(Brand.mono(12, on ? .semibold : .regular))
-                        .foregroundStyle(on ? Brand.base : Brand.textSecondary)
-                        .padding(.horizontal, 12).padding(.vertical, 5)
-                        .background { if on { Capsule().fill(Brand.textPrimary) } }
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(3)
-        .background(Capsule().fill(Brand.chipFill))
-        .overlay(Capsule().strokeBorder(Brand.hairline, lineWidth: 1))
+        SegmentedPills(
+            items: Array(Section.allCases),
+            selection: section,
+            title: { NSLocalizedString($0.rawValue, comment: "") },
+            onSelect: { section = $0 })
     }
 
     private var explainButton: some View {
         Button { showExplain = true } label: {
             Label(NSLocalizedString("Explain", comment: ""), systemImage: "sparkles")
-                .font(Brand.mono(11, .semibold)).foregroundStyle(Tool.status.accent)
+                .font(Brand.sans(13, .medium))
+                .foregroundStyle(Brand.textPrimary)
                 .padding(.horizontal, 12).padding(.vertical, 6)
-                .background(Capsule().fill(Tool.status.accent.opacity(0.12)))
-                .overlay(Capsule().strokeBorder(Tool.status.accent.opacity(0.30), lineWidth: 1))
+                .background(
+                    RoundedRectangle(cornerRadius: Brand.radiusControl, style: .continuous)
+                        .fill(Brand.cardFill)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: Brand.radiusControl, style: .continuous)
+                        .strokeBorder(Brand.hairline, lineWidth: 1)
+                )
         }
         .buttonStyle(.plain)
     }

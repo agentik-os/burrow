@@ -260,7 +260,7 @@ struct TaskReportView: View {
                     }
                     Color.clear.frame(height: 1).id("BOTTOM")
                 }
-                .padding(.horizontal, 18).padding(.vertical, 12)
+                .padding(.horizontal, Brand.pageInset).padding(.vertical, 12)
             }
             .scrollIndicators(.hidden)
             // Tail-follow the report as new lines stream in. The scroll is
@@ -302,15 +302,23 @@ struct TaskReportView: View {
 struct HeroOrb: View {
     let accent: Color
     var size: CGFloat = 150
+    var glyph: String? = nil
+
     var body: some View {
-        ZStack {
-            Circle().fill(RadialGradient(
-                colors: [accent.opacity(0.85), accent.opacity(0.12)],
-                center: .init(x: 0.4, y: 0.35), startRadius: 4, endRadius: size * 0.85))
-            Circle().strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
+        let tile = min(size, 84)
+        return ZStack {
+            RoundedRectangle(cornerRadius: tile * 0.28, style: .continuous)
+                .fill(Brand.cardFill)
+            RoundedRectangle(cornerRadius: tile * 0.28, style: .continuous)
+                .strokeBorder(Brand.hairline, lineWidth: 1)
+            if let glyph {
+                Image(systemName: glyph)
+                    .font(.system(size: Brand.scaled(tile * 0.36), weight: .regular))
+                    .foregroundStyle(accent)
+            }
         }
-        .frame(width: size, height: size)
-        .shadow(color: accent.opacity(0.35), radius: 40)
+        .frame(width: tile, height: tile)
+        .accessibilityHidden(true)
     }
 }
 
@@ -323,9 +331,17 @@ struct PillButton: View {
             Text(NSLocalizedString(title, comment: ""))
                 .font(Brand.sans(13, .semibold))
                 .foregroundStyle(filled ? Brand.onInverse : Brand.textPrimary)
-                .padding(.horizontal, 22).padding(.vertical, 10)
-                .background(Capsule().fill(filled ? Brand.inverse : Brand.chipFill))
-                .overlay(filled ? nil : Capsule().strokeBorder(Brand.hairline, lineWidth: 1))
+                .padding(.horizontal, 16).padding(.vertical, 9)
+                .background(
+                    RoundedRectangle(cornerRadius: Brand.radiusControl, style: .continuous)
+                        .fill(filled ? Brand.inverse : Brand.chipFill)
+                )
+                .overlay {
+                    if !filled {
+                        RoundedRectangle(cornerRadius: Brand.radiusControl, style: .continuous)
+                            .strokeBorder(Brand.hairline, lineWidth: 1)
+                    }
+                }
         }
         .buttonStyle(.plain)
     }
@@ -339,10 +355,10 @@ struct ToolHero<Buttons: View>: View {
     var body: some View {
         VStack(spacing: 18) {
             Spacer()
-            HeroOrb(accent: tool.accent)
+            HeroOrb(accent: Brand.textPrimary, glyph: tool.glyph)
             VStack(spacing: 8) {
-                Text(NSLocalizedString(title, comment: "")).font(Brand.serif(28, .medium)).foregroundStyle(Brand.textPrimary)
-                Text(NSLocalizedString(subtitle, comment: "")).font(Brand.serif(15)).italic().foregroundStyle(Brand.textSecondary)
+                Text(NSLocalizedString(title, comment: "")).font(Brand.sans(28, .semibold)).foregroundStyle(Brand.textPrimary)
+                Text(NSLocalizedString(subtitle, comment: "")).font(Brand.sans(15)).foregroundStyle(Brand.textSecondary)
             }
             HStack(spacing: 12) { buttons() }.padding(.top, 4)
             Spacer(); Spacer()
@@ -376,7 +392,7 @@ struct ViewLogDisclosure: View {
                         Spacer()
                     }
                     .foregroundStyle(Brand.textSecondary)
-                    .padding(.horizontal, 18).padding(.vertical, 9)
+                    .padding(.horizontal, Brand.pageInset).padding(.vertical, 9)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -388,7 +404,7 @@ struct ViewLogDisclosure: View {
                         Text(log)
                             .font(Brand.mono(10)).foregroundStyle(Brand.textTertiary)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 18).padding(.bottom, 12)
+                            .padding(.horizontal, Brand.pageInset).padding(.bottom, 12)
                             .textSelection(.enabled)
                     }
                     .frame(maxHeight: 240)
@@ -421,6 +437,6 @@ struct DoneBanner: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 14).fill(accent.opacity(0.10)))
         .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(accent.opacity(0.35), lineWidth: 1))
-        .padding(.horizontal, 18).padding(.top, 8)
+        .padding(.horizontal, Brand.pageInset).padding(.top, 8)
     }
 }

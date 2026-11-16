@@ -110,22 +110,31 @@ struct SpikeSheet: View {
         .task { load() }
     }
 
+    /// Fixed light-on-dark colours. This sheet forces `.colorScheme(.dark)`
+    /// and adaptive Brand fills don't always follow that override.
     private var metricToggle: some View {
         HStack(spacing: 2) {
             ForEach(ProcMetric.allCases) { m in
                 let on = m == metric
                 Button { metric = m } label: {
-                    Text(m.rawValue).font(Brand.mono(9, on ? .bold : .regular))
-                        .foregroundStyle(on ? Color.black : Brand.textSecondary)
-                        .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background { if on { Capsule().fill(.white) } }
-                        .contentShape(Capsule())
+                    Text(m.rawValue).font(Brand.sans(12, on ? .semibold : .regular))
+                        .foregroundStyle(on ? Color(hex: 0xECECEC) : Color.white.opacity(0.62))
+                        .padding(.horizontal, 10).padding(.vertical, 5)
+                        .background {
+                            if on {
+                                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                    .fill(Color.white.opacity(0.12))
+                            }
+                        }
+                        .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
                 }.buttonStyle(.plain)
             }
         }
-        .padding(2)
-        .background(Capsule().fill(Color.black.opacity(0.28)))
-        .overlay(Capsule().strokeBorder(Brand.hairline, lineWidth: 1))
+        .padding(3)
+        .background(
+            RoundedRectangle(cornerRadius: Brand.radiusControl, style: .continuous)
+                .fill(Color.white.opacity(0.06))
+        )
     }
 
     private func ramLabel(_ r: Row) -> String {

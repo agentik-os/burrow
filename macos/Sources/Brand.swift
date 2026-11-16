@@ -2,17 +2,14 @@
 //  Brand.swift
 //  Burrow
 //
-//  Burrow's visual language — a warm coffee ground (not grey), crisp warm
-//  ink, and a single electric-blue accent for primary emphasis. Each tool
-//  still keeps its own vivid accent (teal / violet / coral / azure / gold)
-//  for active states, so the app reads as one warm, calm surface with
-//  bright, purposeful pops — not a window that re-tints itself per tool.
+//  Visual language for the macOS app: a quiet, native surface in the
+//  spirit of the ChatGPT desktop app. Near-white in light mode, near-black
+//  in dark mode, one restrained accent, and system type. Tool screens share
+//  these tokens instead of inventing their own chrome.
 //
-//  Every surface/text token is appearance-adaptive (warm-dark + warm-light)
-//  so the whole shell follows the system theme. Type is the bundled brand
-//  set:
-//    * mono / rounded / sans  — Geist + Geist Mono (registered in Fonts.swift)
-//    * display / serif        — Cal Sans, the one expressive voice
+//  Semantic status colours (success / warning / danger) stay distinct so a
+//  health reading is still readable, but they are desaturated — colour is
+//  information, not decoration.
 //
 
 import AppKit
@@ -72,98 +69,94 @@ extension Color {
 }
 
 enum Brand {
-    // MARK: Ground — warm coffee (dark) / warm paper (light)
-    static let base      = Color.adaptive(0x17120A, 0xF4EFE6)
-    static let baseSoft  = Color.adaptive(0x211A11, 0xFCF9F3)
-    static let nearBlack = Color.adaptive(0x0F0B05, 0xE8E1D4)
+    // MARK: Ground — near-black (dark) / near-white (light)
+    /// Main reading surface.
+    static let canvas     = Color.adaptive(0x212121, 0xFFFFFF)
+    /// Sidebar wash laid over the sidebar material.
+    static let sidebar    = Color.adaptive(0x171717, 0xF7F7F8, darkA: 0.55, lightA: 0.72)
+    static let base       = canvas
+    static let baseSoft   = Color.adaptive(0x2A2A2A, 0xFFFFFF)
+    static let nearBlack  = Color.adaptive(0x171717, 0xF4F4F5)
 
-    // MARK: Text — warm off-white (dark) / warm espresso (light)
-    static let ink           = Color.adaptive(0xEDE6DA, 0x221B11)
-    static let textPrimary   = Color.adaptive(0xEDE6DA, 0x221B11)
-    static let textSecondary = Color.adaptive(0xEDE6DA, 0x221B11, darkA: 0.62, lightA: 0.62)
-    static let textTertiary  = Color.adaptive(0xEDE6DA, 0x221B11, darkA: 0.40, lightA: 0.46)
+    // MARK: Text
+    static let ink           = Color.adaptive(0xECECEC, 0x0D0D0D)
+    static let textPrimary   = Color.adaptive(0xECECEC, 0x0D0D0D)
+    static let textSecondary = Color.adaptive(0xECECEC, 0x0D0D0D, darkA: 0.64, lightA: 0.62)
+    static let textTertiary  = Color.adaptive(0xECECEC, 0x0D0D0D, darkA: 0.40, lightA: 0.46)
 
-    // MARK: Surfaces — warm-white lift (dark) / warm cards over paper (light)
-    static let hairline      = Color.adaptive(0xF2ECE0, 0x2A2114, darkA: 0.10, lightA: 0.12)
-    static let cardFill      = Color.adaptive(0xF2ECE0, 0xFFFFFF, darkA: 0.07, lightA: 0.66)
-    static let cardFillHover = Color.adaptive(0xF2ECE0, 0xFFFFFF, darkA: 0.11, lightA: 0.90)
-    static let chipFill      = Color.adaptive(0xF2ECE0, 0x2A2114, darkA: 0.08, lightA: 0.07)
-    static let trackFill     = Color.adaptive(0xF2ECE0, 0x2A2114, darkA: 0.10, lightA: 0.10)
-    /// Recessed panel/track — darker than the ground in both modes.
-    static let insetFill     = Color.adaptive(0x000000, 0x2A2114, darkA: 0.22, lightA: 0.07)
+    // MARK: Surfaces
+    static let hairline      = Color.adaptive(0xFFFFFF, 0x000000, darkA: 0.10, lightA: 0.08)
+    static let cardFill      = Color.adaptive(0x2B2B2B, 0xF7F7F8)
+    static let cardFillHover = Color.adaptive(0x333333, 0xEFEFF1)
+    static let chipFill      = Color.adaptive(0xFFFFFF, 0x000000, darkA: 0.06, lightA: 0.05)
+    static let trackFill     = Color.adaptive(0xFFFFFF, 0x000000, darkA: 0.10, lightA: 0.06)
+    /// Recessed field — search boxes, code blocks, segmented tracks.
+    static let insetFill     = Color.adaptive(0x000000, 0x000000, darkA: 0.28, lightA: 0.04)
+    static let sidebarSelection = Color.adaptive(0xFFFFFF, 0x000000, darkA: 0.08, lightA: 0.06)
+    static let sidebarHover     = Color.adaptive(0xFFFFFF, 0x000000, darkA: 0.05, lightA: 0.04)
+    static let segmentTrack     = Color.adaptive(0xFFFFFF, 0x000000, darkA: 0.08, lightA: 0.05)
+    static let segmentSelected  = Color.adaptive(0x3A3A3A, 0xFFFFFF)
 
-    // MARK: Inverse — the high-contrast CTA pill (bright on dark, ink on paper)
-    static let inverse   = Color.adaptive(0xFFFFFF, 0x221B11)
-    static let onInverse = Color.adaptive(0x0F0B05, 0xF4EFE6)
+    // MARK: Inverse — the high-contrast control (light on dark, ink on paper)
+    static let inverse   = Color.adaptive(0xECECEC, 0x0D0D0D)
+    static let onInverse = Color.adaptive(0x171717, 0xFFFFFF)
 
-    // MARK: Accent — one electric blue for primary emphasis (both modes)
-    static let accent   = Color(hex: 0x5B8DEF)
-    static let onAccent = Color(hex: 0x08101C)   // near-black text on any bright accent
-    static let lilac    = Color(hex: 0xB7B2FF)
-    static let apricot  = Color(hex: 0xFFD3B6)
-    static let mint     = Color(hex: 0x8FE9D0)
+    // MARK: Accent — one restrained green, used sparingly
+    static let accent   = Color(hex: 0x1F8F6B)
+    static let onAccent = Color(hex: 0xFFFFFF)
 
-    // MARK: Metric / per-tool accents (vivid pops, fixed across modes)
-    static let green  = Color(hex: 0x3CB371)
-    static let gold   = Color(hex: 0xE6A93C)
-    static let amber  = Color(hex: 0xF0B24A)
-    static let orange = Color(hex: 0xF0714E)
-    static let blue   = Color(hex: 0x4FA3E3)
-    static let red    = Color(hex: 0xF0604E)
-    static let teal   = Color(hex: 0x16A37F)
-    static let violet = Color(hex: 0x8E84F0)
-    static let moss   = Color(hex: 0x6FB06A)
-    static let ginger = Color(hex: 0xD98C5F)
+    // MARK: Status — muted, still distinguishable
+    static let green  = accent
+    static let gold   = Color(hex: 0xB8923A)
+    static let amber  = Color(hex: 0xC4923A)
+    static let orange = Color(hex: 0xC4845A)
+    static let blue   = Color(hex: 0x6A8FBF)
+    static let red    = Color(hex: 0xD15B54)
+    static let teal   = Color(hex: 0x3E8F86)
+    static let violet = Color(hex: 0x8A86B8)
+    static let moss   = Color(hex: 0x7A9474)
+    static let ginger = Color(hex: 0xC4926E)
+    static let lilac  = Color(hex: 0x8A86B8)
+    static let apricot = Color(hex: 0xC4926E)
+    static let mint   = accent
 
-    // MARK: Brand mark colours (the Burrow disc keeps a warm pop, both modes)
-    static let cream    = Color(hex: 0xF3ECDD)
-    static let espresso = Color(hex: 0x1A140E)
+    // Kept so older call sites compile; the mark itself is monochrome now.
+    static let cream    = textPrimary
+    static let espresso = canvas
 
-    // MARK: Shape — rounded, the house signature
-    static let rSmall: CGFloat = 12
-    static let rCard:  CGFloat = 18
-    static let rLarge: CGFloat = 26
+    // MARK: Space and shape — one scale, used everywhere
+    static let pageInset: CGFloat = 24
+    static let cardPadding: CGFloat = 16
+    static let radiusControl: CGFloat = 10
+    static let radiusRow: CGFloat = 8
+    static let radiusCard: CGFloat = 14
+    static let rSmall: CGFloat = 8
+    static let rCard: CGFloat = 14
+    static let rLarge: CGFloat = 18
 
-    /// A stable warm veil drawn over the window vibrancy — identical on every
-    /// pane (no per-tool re-tint), adaptive to the system theme.
-    static var windowVeil: LinearGradient {
-        LinearGradient(
-            colors: [Color.adaptive(0x211A11, 0xFCF9F3, darkA: 0.55, lightA: 0.50),
-                     Color.adaptive(0x100B05, 0xEFE8DC, darkA: 0.82, lightA: 0.64)],
-            startPoint: .top, endPoint: .bottom)
-    }
+    /// Flat canvas. Older call sites used this as a tinted veil; it is a
+    /// solid ground now so panes don't wash the window in a gradient.
+    static var windowVeil: Color { canvas }
 
-    /// A faint warm glow for the canvas — the house "gradient", kept ambient
-    /// (a single soft light in the top-trailing corner) rather than a per-tool
-    /// wash. Sits over the veil in RootView.
-    static var ambientGlow: RadialGradient {
-        RadialGradient(
-            colors: [Color(hex: 0xD9A066).opacity(0.07), .clear],
-            center: .topTrailing, startRadius: 0, endRadius: 560)
-    }
+    /// Retired. Present so a stray call site paints nothing.
+    static var ambientGlow: Color { .clear }
 
-    // MARK: Type — the bundled brand set (registered in Fonts.swift)
+    // MARK: Type — San Francisco, the system face
     //
-    // Geist resolves to a REAL face per weight rather than `.weight(...)` over
-    // one family. Asking a variable font for a weight it has no registered face
-    // for made CoreText synthesize the instance, and that occasionally produced
-    // no glyphs at all — see the note in Fonts.swift.
-    //
-    // Sizes here and at `.system(size:)` call sites are written at the
-    // historical 1.0-scale values; the user's interface text scale
-    // (issue #407) multiplies through `scaled(_:)` at resolve time.
+    // Sizes are written at the historical 1.0-scale values; the user's
+    // interface text scale (issue #407) multiplies through `scaled(_:)`
+    // at resolve time.
     static func mono(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
-        .custom(Fonts.geistMono(weight), size: scaled(size))
+        .system(size: scaled(size), weight: weight, design: .monospaced)
     }
     static func sans(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
-        .custom(Fonts.geist(weight), size: scaled(size))
+        .system(size: scaled(size), weight: weight)
     }
-    /// The display / hero voice — Cal Sans.
-    static func display(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
-        .custom(Fonts.display, size: scaled(size)).weight(weight)
+    static func display(_ size: CGFloat, _ weight: Font.Weight = .semibold) -> Font {
+        .system(size: scaled(size), weight: weight)
     }
-    static func serif(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
-        .custom(Fonts.display, size: scaled(size)).weight(weight)
+    static func serif(_ size: CGFloat, _ weight: Font.Weight = .semibold) -> Font {
+        .system(size: scaled(size), weight: weight)
     }
 
     /// A point size at the user's interface text scale. The brand factories

@@ -78,7 +78,7 @@ struct BrewServicesView: View {
                 .labelsHidden().toggleStyle(.switch).tint(Tool.apps.accent)
             }
         }
-        .padding(.horizontal, 18).padding(.vertical, 11)
+        .padding(.horizontal, Brand.pageInset).padding(.vertical, 11)
         .overlay(alignment: .bottom) {
             Rectangle().fill(Brand.hairline).frame(height: 1).padding(.leading, 18)
         }

@@ -43,9 +43,9 @@ struct PortsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            toolbar.padding(.horizontal, 18).padding(.top, 4).padding(.bottom, 12)
+            toolbar.padding(.horizontal, Brand.pageInset).padding(.top, 16).padding(.bottom, 14)
             Rectangle().fill(Brand.hairline).frame(height: 1)
-            columnHeader.padding(.horizontal, 18).padding(.vertical, 7)
+            columnHeader.padding(.horizontal, Brand.pageInset).padding(.vertical, 7)
             Rectangle().fill(Brand.hairline).frame(height: 1)
             ScrollView {
                 LazyVStack(spacing: 0) {
@@ -67,19 +67,17 @@ struct PortsView: View {
 
     private var toolbar: some View {
         HStack(spacing: 10) {
-            HStack(spacing: 2) {
-                ForEach(PortInspector.Filter.allCases, id: \.self) { seg($0) }
-            }
-            .padding(3)
-            .background(Capsule().fill(Brand.insetFill))
-            .overlay(Capsule().strokeBorder(Brand.hairline, lineWidth: 1))
+            SegmentedPills(
+                items: Array(PortInspector.Filter.allCases),
+                selection: filter,
+                title: { filterTitle($0) },
+                onSelect: { filter = $0 })
             if loading { ProgressView().controlSize(.small) }
             Spacer()
-            HStack(spacing: 5) {
-                Image(systemName: "magnifyingglass").font(.system(size: Brand.scaled(10))).foregroundStyle(Brand.textTertiary)
-                TextField(NSLocalizedString("port, process, service, host…", comment: ""), text: $query)
-                    .textFieldStyle(.plain).font(Brand.sans(12)).frame(width: 170)
-            }
+            QuietSearchField(
+                placeholder: "port, process, service, host…",
+                text: $query,
+                width: 200)
             Button { resolveDNS.toggle(); if resolveDNS { resolveHosts(conns) } } label: {
                 Image(systemName: resolveDNS ? "globe" : "number")
                     .font(.system(size: Brand.scaled(11), weight: .semibold))
@@ -96,21 +94,12 @@ struct PortsView: View {
         }
     }
 
-    private func seg(_ f: PortInspector.Filter) -> some View {
-        let on = filter == f
-        let label: String
+    private func filterTitle(_ f: PortInspector.Filter) -> String {
         switch f {
-        case .all: label = NSLocalizedString("All", comment: "")
-        case .listening: label = NSLocalizedString("Listening", comment: "")
-        case .established: label = NSLocalizedString("Established", comment: "")
+        case .all: return NSLocalizedString("All", comment: "")
+        case .listening: return NSLocalizedString("Listening", comment: "")
+        case .established: return NSLocalizedString("Established", comment: "")
         }
-        return Button { filter = f } label: {
-            Text(label).font(Brand.mono(11, on ? .semibold : .regular))
-                .foregroundStyle(on ? Brand.onInverse : Brand.textSecondary)
-                .padding(.horizontal, 12).padding(.vertical, 5)
-                .background { if on { Capsule().fill(Brand.inverse) } }
-                .contentShape(Capsule())
-        }.buttonStyle(.plain)
     }
 
     // MARK: Header (sortable)
@@ -207,7 +196,7 @@ struct PortsView: View {
                     .font(.system(size: Brand.scaled(10), weight: .semibold)).foregroundStyle(Brand.textTertiary)
                     .frame(width: 22, alignment: .center)
             }
-            .padding(.horizontal, 18).padding(.vertical, 9)
+            .padding(.horizontal, Brand.pageInset).padding(.vertical, 9)
             .contentShape(Rectangle())
             .onTapGesture { withAnimation(.easeOut(duration: 0.12)) { expandedID = on ? nil : p.id } }
 
@@ -272,7 +261,7 @@ struct PortsView: View {
             }
             .padding(.top, 2)
         }
-        .padding(.horizontal, 18).padding(.top, 2).padding(.bottom, 12)
+        .padding(.horizontal, Brand.pageInset).padding(.top, 2).padding(.bottom, 12)
     }
 
     private func detailRow(_ label: String, _ value: String) -> some View {

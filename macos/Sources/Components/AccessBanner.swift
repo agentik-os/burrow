@@ -20,38 +20,38 @@ struct AccessBanner: View {
     var onAction: () -> Void = { Privacy.openFullDiskAccessSettings() }
     var onDismiss: () -> Void
 
-    /// The bar keeps its fixed dark ground in both modes, so every foreground
-    /// must be fixed too — the adaptive Brand text colours turn espresso in
-    /// light mode and vanished against this background (#410).
-    private static let onDark = Color(hex: 0xEDE6DA)
-
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: glyph)
-                .font(.system(size: Brand.scaled(15), weight: .semibold))
-                .foregroundStyle(Brand.amber)
+                .font(.system(size: Brand.scaled(14), weight: .regular))
+                .foregroundStyle(Brand.textPrimary)
                 .frame(width: 32, height: 32)
-                .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Brand.amber.opacity(0.14)))
+                .background(
+                    RoundedRectangle(cornerRadius: Brand.radiusRow, style: .continuous)
+                        .fill(Brand.insetFill)
+                )
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(Brand.sans(12, .semibold)).foregroundStyle(Self.onDark)
+                    .font(Brand.sans(13, .semibold)).foregroundStyle(Brand.textPrimary)
                 Text(detail)
-                    .font(Brand.sans(11)).foregroundStyle(Self.onDark.opacity(0.62))
+                    .font(Brand.sans(12)).foregroundStyle(Brand.textSecondary)
             }
             Spacer(minLength: 14)
             Button(action: onAction) {
                 Text(actionTitle)
-                    .font(Brand.sans(11, .semibold)).foregroundStyle(Self.onDark)
+                    .font(Brand.sans(12, .semibold)).foregroundStyle(Brand.onInverse)
                     .padding(.horizontal, 12).padding(.vertical, 6)
-                    .background(Capsule().fill(Color.white.opacity(0.10)))
-                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.12), lineWidth: 1))
+                    .background(
+                        RoundedRectangle(cornerRadius: Brand.radiusControl, style: .continuous)
+                            .fill(Brand.inverse)
+                    )
             }
             .buttonStyle(.plain)
             Button(action: onDismiss) {
                 Image(systemName: "xmark")
-                    .font(.system(size: Brand.scaled(10), weight: .bold))
-                    .foregroundStyle(Self.onDark.opacity(0.55))
+                    .font(.system(size: Brand.scaled(10), weight: .semibold))
+                    .foregroundStyle(Brand.textTertiary)
                     .frame(width: 22, height: 22)
                     .contentShape(Rectangle())
             }
@@ -59,13 +59,16 @@ struct AccessBanner: View {
             .help(NSLocalizedString("Dismiss", comment: ""))
             .accessibilityLabel(NSLocalizedString("Dismiss", comment: ""))
         }
-        .padding(.horizontal, 14).padding(.vertical, 11)
+        .padding(.horizontal, 14).padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(hex: 0x1A1812).opacity(0.96))
+            RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
+                .fill(Brand.cardFill)
         )
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Brand.amber.opacity(0.25), lineWidth: 1))
-        .shadow(color: .black.opacity(0.35), radius: 18, y: 6)
+        .overlay(
+            RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
+                .strokeBorder(Brand.hairline, lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.08), radius: 12, y: 4)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(title)
     }

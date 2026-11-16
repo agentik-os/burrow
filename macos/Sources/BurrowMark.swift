@@ -2,8 +2,8 @@
 //  BurrowMark.swift
 //  Burrow
 //
-//  Burrow's mark: a cream disc with a dark burrow mouth (a tunnel arch).
-//  Used by the floating rail and the popup header.
+//  Burrow's mark: a monochrome disc with a tunnel-arch mouth. Follows
+//  light and dark mode. Used by the sidebar and the popup header.
 //
 
 import SwiftUI
@@ -14,7 +14,7 @@ struct BurrowMark: View {
         GeometryReader { geo in
             let s = min(geo.size.width, geo.size.height)
             ZStack {
-                Circle().fill(Brand.cream)
+                Circle().fill(Brand.textPrimary)
                 Path { p in
                     let cx = s * 0.5
                     let baseY = s * 0.70
@@ -25,8 +25,10 @@ struct BurrowMark: View {
                              clockwise: false)
                     p.closeSubpath()
                 }
-                .fill(Brand.espresso)
+                .fill(Color.black)
+                .blendMode(.destinationOut)
             }
+            .compositingGroup()
             .frame(width: s, height: s)
         }
     }

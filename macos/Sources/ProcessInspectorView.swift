@@ -91,7 +91,7 @@ struct ProcessInspectorView: View {
             }
             .buttonStyle(.plain).accessibilityLabel(NSLocalizedString("Close", comment: ""))
         }
-        .padding(.horizontal, 18).padding(.vertical, 14)
+        .padding(.horizontal, Brand.pageInset).padding(.vertical, 14)
     }
 
     @ViewBuilder private var chips: some View {

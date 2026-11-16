@@ -134,7 +134,7 @@ struct UpdatesView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header.padding(.horizontal, 18).padding(.vertical, 11)
+            header.padding(.horizontal, Brand.pageInset).padding(.vertical, 11)
             Rectangle().fill(Brand.hairline).frame(height: 1)
             switch model.source {
             case .apps: appsList
@@ -149,12 +149,13 @@ struct UpdatesView: View {
 
     private var header: some View {
         HStack(spacing: 10) {
-            HStack(spacing: 2) {
-                sourceTab("Mac apps", .apps, count: model.checked && !model.availableItems.isEmpty ? model.availableItems.count : nil)
-                sourceTab("Homebrew", .homebrew, count: model.brewItems.isEmpty ? nil : model.brewItems.count)
-            }
-            .padding(2)
-            .background(Capsule().fill(Brand.hairline.opacity(0.5)))
+            SegmentedPills(
+                items: [UpdatesSource.apps, .homebrew],
+                selection: model.source,
+                title: { sourceTitle($0) },
+                badge: { sourceBadge($0) },
+                spokenLabel: { sourceAccessibility($0) },
+                onSelect: { model.source = $0 })
             Spacer()
             switch model.source {
             case .apps: appsActions
@@ -163,26 +164,34 @@ struct UpdatesView: View {
         }
     }
 
-    private func sourceTab(_ title: String, _ value: UpdatesSource, count: Int?) -> some View {
-        let on = model.source == value
-        return Button { model.source = value } label: {
-            HStack(spacing: 5) {
-                Text(NSLocalizedString(title, comment: "")).font(Brand.mono(11, on ? .semibold : .regular))
-                if let count {
-                    Text(verbatim: "\(count)").font(Brand.mono(10, .semibold))
-                        .padding(.horizontal, 5).padding(.vertical, 1)
-                        .background(Capsule().fill(on ? Brand.onInverse.opacity(0.18) : Tool.apps.accent.opacity(0.14)))
-                }
-            }
-            .foregroundStyle(on ? Brand.onInverse : Brand.textSecondary)
-            .padding(.horizontal, 12).padding(.vertical, 5)
-            .background { if on { Capsule().fill(Brand.inverse) } }
-            .contentShape(Capsule())
+    private func sourceTitle(_ value: UpdatesSource) -> String {
+        switch value {
+        case .apps: return NSLocalizedString("Mac apps", comment: "")
+        case .homebrew: return NSLocalizedString("Homebrew", comment: "")
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(count.map { String(format: NSLocalizedString($0 == 1 ? "%d update" : "%d updates", comment: ""), $0) }
-                            .map { "\(NSLocalizedString(title, comment: "")) — \($0)" } ?? NSLocalizedString(title, comment: ""))
-        .accessibilityAddTraits(on ? .isSelected : [])
+    }
+
+    private func sourceBadge(_ value: UpdatesSource) -> String? {
+        guard let count = sourceCount(value) else { return nil }
+        return "\(count)"
+    }
+
+    private func sourceAccessibility(_ value: UpdatesSource) -> String {
+        let title = sourceTitle(value)
+        guard let count = sourceCount(value) else { return title }
+        let detail = String(format: NSLocalizedString(count == 1 ? "%d update" : "%d updates", comment: ""), count)
+        return "\(title) — \(detail)"
+    }
+
+    private func sourceCount(_ value: UpdatesSource) -> Int? {
+        switch value {
+        case .apps:
+            guard model.checked, !model.availableItems.isEmpty else { return nil }
+            return model.availableItems.count
+        case .homebrew:
+            guard !model.brewItems.isEmpty else { return nil }
+            return model.brewItems.count
+        }
     }
 
     /// Mac apps: the explicit network check, then the batch once results exist.
@@ -411,7 +420,7 @@ struct UpdatesView: View {
     ) -> some View {
         Button(action: action) {
             Text(NSLocalizedString(title, comment: "")).font(Brand.sans(11, .semibold))
-                .foregroundStyle(filled ? Color.white : Tool.apps.accent)
+                .foregroundStyle(filled ? Brand.onInverse : Tool.apps.accent)
                 .padding(.horizontal, 12).padding(.vertical, 5)
                 .background(Capsule().fill(filled ? Tool.apps.accent : Tool.apps.accent.opacity(0.12)))
         }
@@ -450,7 +459,7 @@ struct UpdatesView: View {
                 ProgressView().controlSize(.small).scaleEffect(0.8).frame(width: 64)
             } else {
                 Button { model.upgrade(item) } label: {
-                    Text("Update").font(Brand.sans(11, .semibold)).foregroundStyle(.white)
+                    Text("Update").font(Brand.sans(11, .semibold)).foregroundStyle(Brand.onInverse)
                         .padding(.horizontal, 12).padding(.vertical, 5)
                         .background(Capsule().fill(Tool.apps.accent))
                 }.buttonStyle(.plain).frame(width: 64)

@@ -62,7 +62,7 @@ struct ActivityView: View {
                 LazyVStack(spacing: 10) {
                     ForEach(model.sessions) { SessionRow(session: $0) }
                 }
-                .padding(.horizontal, 18).padding(.vertical, 12)
+                .padding(.horizontal, Brand.pageInset).padding(.vertical, 12)
             }
             .scrollIndicators(.hidden)
         }
@@ -107,11 +107,11 @@ private struct SessionRow: View {
 
     private var glyph: String {
         switch session.command {
-        case "clean":     return "sparkles"
-        case "optimize":  return "wand.and.stars"
-        case "uninstall": return "trash"
-        case "purge":     return "folder.badge.minus"
-        case "installer": return "arrow.down.app"
+        case "clean":     return Tool.clean.glyph
+        case "optimize":  return Tool.optimize.glyph
+        case "uninstall": return "minus.circle"
+        case "purge":     return Tool.purge.glyph
+        case "installer": return Tool.installer.glyph
         default:          return "clock.arrow.circlepath"
         }
     }

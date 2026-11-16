@@ -40,7 +40,7 @@ struct SettingsView: View {
     /// Wired by AppDelegate; the only consumer is "Run maintenance now".
     var onRunMaintenance: (() -> Void)?
     /// Esc leaves Settings (RootView returns to the previous pane). The
-    /// pane has no close chrome of its own — navigation lives in the floating rail.
+    /// pane has no close chrome of its own — navigation lives in the sidebar.
     var onClose: (() -> Void)?
     /// A section anchor to scroll to once the pane lays out. Only set when
     /// something deep-linked here to offer a specific setting.
@@ -154,9 +154,7 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-                .padding(.horizontal, 18).padding(.top, 8).padding(.bottom, 10)
-            Rectangle().fill(Brand.hairline).frame(height: 1)
+            PaneHeader { header }
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
@@ -170,9 +168,9 @@ struct SettingsView: View {
                     // Full-bleed pane, readable column: the cards cap at a
                     // comfortable measure and stay centered in wide windows.
                     .frame(maxWidth: 680)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 14)
-                    .padding(.bottom, 22)
+                    .padding(.horizontal, Brand.pageInset)
+                    .padding(.top, 16)
+                    .padding(.bottom, 28)
                     .frame(maxWidth: .infinity)
                 }
                 .scrollIndicators(.hidden)
@@ -225,24 +223,11 @@ struct SettingsView: View {
     }
 
     private var segmented: some View {
-        HStack(spacing: 2) {
-            ForEach(Tab.allCases) { t in
-                let on = t == tab
-                Button { withAnimation(.easeOut(duration: 0.14)) { tab = t } } label: {
-                    Text(t.label)
-                        .font(Brand.mono(12, on ? .semibold : .regular))
-                        .foregroundStyle(on ? Brand.onInverse : Brand.textSecondary)
-                        .padding(.horizontal, 12).padding(.vertical, 5)
-                        .background { if on { Capsule().fill(Brand.inverse) } }
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(on ? .isSelected : [])
-            }
-        }
-        .padding(3)
-        .background(Capsule().fill(Brand.insetFill))
-        .overlay(Capsule().strokeBorder(Brand.hairline, lineWidth: 1))
+        SegmentedPills(
+            items: Array(Tab.allCases),
+            selection: tab,
+            title: { $0.label },
+            onSelect: { tab = $0 })
     }
 
     // MARK: - General
@@ -1071,7 +1056,7 @@ struct SettingsView: View {
             Text(NSLocalizedString(label, comment: "")).font(Brand.sans(12)).foregroundStyle(Brand.textPrimary)
         }
         .toggleStyle(.switch)
-        .tint(Brand.green)
+        .tint(Brand.accent)
         .onChange(of: isOn.wrappedValue) { _, n in onChange(n) }
     }
 

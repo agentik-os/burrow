@@ -271,7 +271,7 @@ struct MoInteractiveView: View {
                     Label("Rescan", systemImage: "arrow.clockwise").font(Brand.mono(11)).foregroundStyle(Brand.textSecondary)
                 }.buttonStyle(.plain)
             }
-            .padding(.horizontal, 18).padding(.top, 4).padding(.bottom, 12)
+            .padding(.horizontal, Brand.pageInset).padding(.top, 16).padding(.bottom, 14)
             Rectangle().fill(Brand.hairline).frame(height: 1)
 
             ScrollView {
@@ -294,7 +294,7 @@ struct MoInteractiveView: View {
                         .font(Brand.mono(9)).foregroundStyle(Brand.textTertiary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 18).padding(.bottom, 4)
+                .padding(.horizontal, Brand.pageInset).padding(.bottom, 4)
             } else if runner.totalCount > runner.items.count {
                 HStack(spacing: 8) {
                     Text("Showing the \(runner.items.count) biggest of \(runner.totalCount).")
@@ -306,7 +306,7 @@ struct MoInteractiveView: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 18).padding(.bottom, 4)
+                .padding(.horizontal, Brand.pageInset).padding(.bottom, 4)
             }
 
             Rectangle().fill(Brand.hairline).frame(height: 1)
@@ -323,12 +323,12 @@ struct MoInteractiveView: View {
                 }.buttonStyle(.plain).padding(.trailing, 8)
                 Button { confirmRemoval() } label: {
                     Text(selected.isEmpty ? LocalizedStringKey("Remove") : "Remove (\(selected.count))")
-                        .font(Brand.sans(12, .semibold)).foregroundStyle(selected.isEmpty ? Brand.textTertiary : .white)
+                        .font(Brand.sans(12, .semibold)).foregroundStyle(selected.isEmpty ? Brand.textTertiary : Brand.onInverse)
                         .padding(.horizontal, 14).padding(.vertical, 6)
                         .background(Capsule().fill(selected.isEmpty ? Brand.chipFill : cfg.tool.accent))
                 }.buttonStyle(.plain).disabled(selected.isEmpty)
             }
-            .padding(.horizontal, 18).padding(.vertical, 10)
+            .padding(.horizontal, Brand.pageInset).padding(.vertical, 10)
         }
     }
 
@@ -375,7 +375,7 @@ struct MoInteractiveView: View {
                     Label("Back", systemImage: "chevron.left").font(Brand.mono(11)).foregroundStyle(Brand.textSecondary)
                 }.buttonStyle(.plain)
             }
-            .padding(.horizontal, 18).padding(.vertical, 12)
+            .padding(.horizontal, Brand.pageInset).padding(.vertical, 12)
             Rectangle().fill(Brand.hairline).frame(height: 1)
             if code == 0 && !nothing {
                 DoneBanner(accent: cfg.tool.accent, title: "Removed", detail: removalDetail)

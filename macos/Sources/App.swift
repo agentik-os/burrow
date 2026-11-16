@@ -39,8 +39,8 @@ enum BurrowMain {
         }
 
         let app = NSApplication.shared
-        // Register the bundled brand typefaces (Geist / Geist Mono / Cal Sans)
-        // before any window builds so Font.custom can reach them.
+        // Bundled faces stay registered. The macOS UI uses the system face
+        // through Brand; this keeps any direct Font.custom call resolvable.
         Fonts.register()
         // Screenshot/QA aid: force a window appearance when BURROW_APPEARANCE
         // is light|dark; unset → follows the system theme (the normal path).

@@ -31,8 +31,8 @@ struct StatusView: View {
         self.live = live
     }
 
-    private let row1H: CGFloat = 162
-    private let row2H: CGFloat = 138
+    private let row1H: CGFloat = 176
+    private let row2H: CGFloat = 160
 
     var body: some View {
         ScrollView {
@@ -94,31 +94,30 @@ struct StatusView: View {
 
     private func memoryDetail(_ s: MoleStatus) -> some View {
         let m = s.memory
-        let lvl = MemoryPressure.percent()
         let free = m.available ?? (m.total > m.used ? m.total - m.used : 0)
         return HStack(alignment: .center, spacing: 22) {
             HStack(spacing: 6) {
-                Image(systemName: "memorychip").font(.system(size: Brand.scaled(12))).foregroundStyle(MemoryPressure.tint(percent: lvl))
-                Text(NSLocalizedString("Memory", comment: "")).font(Brand.mono(10, .semibold)).foregroundStyle(Brand.textSecondary)
+                Image(systemName: "memorychip").font(.system(size: Brand.scaled(12))).foregroundStyle(MemoryPressure.tint(percent: MemoryPressure.percent()))
+                Text(NSLocalizedString("Memory", comment: "")).font(Brand.sans(12, .medium)).foregroundStyle(Brand.textSecondary)
             }
-            memStat(NSLocalizedString("Used", comment: ""), String(format: "%.1f GB", Fmt.gib(m.used)), MemoryPressure.tint(percent: lvl))
+            memStat(NSLocalizedString("Used", comment: ""), String(format: "%.1f GB", Fmt.gib(m.used)), MemoryPressure.tint(percent: MemoryPressure.percent()))
             memStat(NSLocalizedString("Free", comment: ""), String(format: "%.1f GB", Fmt.gib(free)), Brand.textPrimary)
             if let c = m.cached, c > 0 {
                 memStat(NSLocalizedString("Cached", comment: ""), String(format: "%.1f GB", Fmt.gib(c)), Brand.textPrimary)
             }
             memStat(NSLocalizedString("Swap", comment: ""),
                     String(format: "%.1f / %.0f GB", Fmt.gib(m.swapUsed), Fmt.gib(m.swapTotal)),
-                    m.swapUsed > 0 ? MemoryPressure.tint(percent: lvl) : Brand.textPrimary)
+                    m.swapUsed > 0 ? MemoryPressure.tint(percent: MemoryPressure.percent()) : Brand.textPrimary)
             Spacer(minLength: 0)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Brand.cardFill))
+        .glassTile(corner: 14)
     }
 
     private func memStat(_ label: String, _ value: String, _ valueColor: Color) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(Brand.mono(9)).foregroundStyle(Brand.textTertiary)
+            Text(label).font(Brand.sans(11)).foregroundStyle(Brand.textTertiary)
             Text(value).font(Brand.mono(13, .semibold)).foregroundStyle(valueColor)
         }
     }
@@ -135,7 +134,7 @@ struct StatusView: View {
         return ValueTile(
             eyebrow: "CPU", glyph: "cpu", accent: Brand.green,
             value: String(format: "%.1f", s.cpu.usage), unit: "%",
-            chip: chip, values: model.cpuHist, chartStyle: .bars,
+            chip: chip, values: model.cpuHist, chartStyle: .area, domain: .percent,
             footnote: String(format: NSLocalizedString("load %.2f · %.2f · %.2f", comment: ""), s.cpu.load1, s.cpu.load5, s.cpu.load15))
     }
 
@@ -148,7 +147,7 @@ struct StatusView: View {
             eyebrow: "Memory", glyph: "memorychip", accent: MemoryPressure.tint(percent: lvl),
             value: String(format: "%.0f", m.usedPercent), unit: "%",
             chip: (String(format: NSLocalizedString("%d%%", comment: ""), lvl), MemoryPressure.tint(percent: lvl)),
-            values: model.memHist, chartStyle: .area,
+            values: model.memHist, chartStyle: .area, domain: .percent,
             footnote: String(format: NSLocalizedString("%.1f / %.1f GB · swap %.1f GB", comment: ""), used, total, Fmt.gib(m.swapUsed)))
     }
 
@@ -165,7 +164,7 @@ struct StatusView: View {
             eyebrow: "GPU", glyph: "cpu.fill", accent: Brand.orange,
             value: hasUsage ? String(format: "%.0f", g!.usage) : "—",
             unit: hasUsage ? "%" : "",
-            chip: chip, values: model.gpuHist, chartStyle: .bars,
+            chip: chip, values: model.gpuHist, chartStyle: .area, domain: .percent,
             footnote: cores > 0 ? "\(name) · \(cores) cores" : name)
     }
 
@@ -198,8 +197,8 @@ struct StatusView: View {
                             Text("Idle").font(Brand.sans(11)).foregroundStyle(Brand.textTertiary).padding(.leading, 4)
                         }
                     }
-                    MiniChart(values: model.fanHist, color: PowerAccent.fan, style: .area)
-                        .frame(height: 30)
+                    MiniChart(values: model.fanHist, color: PowerAccent.fan, style: .area, domain: .fromZero, allowsFlat: true)
+                        .frame(height: 40)
                 } else {
                     Text("—").font(Brand.mono(30, .semibold)).foregroundStyle(Brand.textTertiary)
                 }
@@ -254,7 +253,7 @@ struct LiveNetCard: View {
         return ValueTile(
             eyebrow: "Network", glyph: "network", accent: Brand.green,
             value: value, unit: unit, chip: chip,
-            values: [],
+            values: [], domain: .fromZero,
             dual: (down: rxHist, up: txHist, downColor: Brand.green, upColor: Brand.blue),
             footnote: "↓ \(Fmt.rate(rx))  ↑ \(Fmt.rate(tx)) · \(snapNet?.name ?? "—") · \(snapNet?.ip ?? "—")")
     }
@@ -314,10 +313,10 @@ struct HealthRing: View {
     let color: Color
     var body: some View {
         ZStack {
-            Circle().stroke(Brand.trackFill, lineWidth: 6)
+            Circle().stroke(Brand.trackFill, lineWidth: 3)
             Circle()
                 .trim(from: 0, to: CGFloat(max(0, min(score, 100))) / 100)
-                .stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             Text("\(score)").font(Brand.mono(14, .semibold)).foregroundStyle(Brand.textPrimary)
         }
@@ -481,10 +480,10 @@ struct RingGauge: View {
     var body: some View {
         VStack(spacing: 3) {
             ZStack {
-                Circle().stroke(Brand.trackFill, lineWidth: 4)
+                Circle().stroke(Brand.trackFill, lineWidth: 2.5)
                 Circle()
                     .trim(from: 0, to: CGFloat(max(0, min(percent, 100))) / 100)
-                    .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .stroke(color, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 Image(systemName: glyph).font(.system(size: size * 0.3)).foregroundStyle(Brand.textSecondary)
             }
@@ -507,17 +506,17 @@ struct LowSpaceBar: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(Brand.trackFill)
                 Capsule()
-                    .fill(LinearGradient(colors: gradientColors, startPoint: .leading, endPoint: .trailing))
+                    .fill(fill)
                     .frame(width: g.size.width * CGFloat(max(0, min(fraction, 1))))
             }
         }
-        .frame(height: 6)
+        .frame(height: 4)
     }
 
-    private var gradientColors: [Color] {
-        if fraction >= 0.9 { return [Brand.amber, Brand.red] }
-        if fraction >= 0.75 { return [Brand.blue, Brand.amber] }
-        return [Brand.blue, Brand.blue]
+    private var fill: Color {
+        if fraction >= 0.9 { return Brand.red }
+        if fraction >= 0.75 { return Brand.amber }
+        return Brand.accent
     }
 }
 

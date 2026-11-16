@@ -78,16 +78,16 @@ struct CleanHub: View {
             }
             Spacer()
         }
-        .padding(.horizontal, 18).padding(.top, 6).padding(.bottom, 6)
+        .padding(.horizontal, Brand.pageInset).padding(.top, 6).padding(.bottom, 6)
     }
 
     private var chooser: some View {
         VStack(spacing: 18) {
             Spacer()
-            HeroOrb(accent: Tool.clean.accent, size: 96)
+            HeroOrb(accent: Brand.textPrimary, size: 96, glyph: Tool.clean.glyph)
             VStack(spacing: 8) {
-                Text(NSLocalizedString("Clean", comment: "")).font(Brand.serif(28, .medium)).foregroundStyle(Brand.textPrimary)
-                Text(NSLocalizedString("Pick what to clear.", comment: "")).font(Brand.serif(15)).italic().foregroundStyle(Brand.textSecondary)
+                Text(NSLocalizedString("Clean", comment: "")).font(Brand.sans(28, .semibold)).foregroundStyle(Brand.textPrimary)
+                Text(NSLocalizedString("Pick what to clear.", comment: "")).font(Brand.sans(15)).foregroundStyle(Brand.textSecondary)
             }
             HStack(spacing: 16) {
                 ForEach(Category.allCases) { c in
@@ -116,20 +116,26 @@ private struct CleanCategoryCard: View {
         Button(action: action) {
             VStack(alignment: .leading, spacing: 10) {
                 Image(systemName: category.tool.glyph)
-                    .font(.system(size: Brand.scaled(24))).foregroundStyle(category.tool.accent)
+                    .font(.system(size: Brand.scaled(22), weight: .regular))
+                    .foregroundStyle(Brand.textPrimary)
                 Spacer(minLength: 6)
                 Text(category.cardTitle)
                     .font(Brand.sans(15, .semibold)).foregroundStyle(Brand.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(category.tool.tagline)
-                    .font(Brand.sans(11)).foregroundStyle(Brand.textSecondary)
+                    .font(Brand.sans(12)).foregroundStyle(Brand.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .frame(width: 200, height: 168, alignment: .leading)
-            .padding(18)
-            .background(RoundedRectangle(cornerRadius: 18).fill(hover ? Brand.cardFillHover : Brand.cardFill))
-            .overlay(RoundedRectangle(cornerRadius: 18)
-                .strokeBorder(category.tool.accent.opacity(hover ? 0.5 : 0.18), lineWidth: 1))
+            .padding(Brand.cardPadding)
+            .background(
+                RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
+                    .fill(hover ? Brand.cardFillHover : Brand.cardFill)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Brand.radiusCard, style: .continuous)
+                    .strokeBorder(Brand.hairline, lineWidth: 1)
+            )
         }
         .buttonStyle(.plain)
         .onHover { hover = $0 }

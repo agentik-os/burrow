@@ -39,11 +39,14 @@ struct AnalyzeView: View {
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(spacing: 8) {
-                Circle()
-                    .fill(RadialGradient(colors: [Tool.analyze.accent.opacity(0.9), Tool.analyze.accent.opacity(0.15)],
-                                         center: .init(x: 0.4, y: 0.35), startRadius: 2, endRadius: 60))
-                    .frame(width: 78, height: 78)
-                    .shadow(color: Tool.analyze.accent.opacity(0.4), radius: 22)
+                ZStack {
+                    Circle().fill(Brand.cardFill)
+                    Circle().strokeBorder(Brand.hairline, lineWidth: 1)
+                    Image(systemName: Tool.analyze.glyph)
+                        .font(.system(size: Brand.scaled(22), weight: .regular))
+                        .foregroundStyle(Brand.textSecondary)
+                }
+                .frame(width: 72, height: 72)
                 Text(model.summaryLine)
                     .font(Brand.mono(11)).foregroundStyle(Brand.textSecondary)
             }
@@ -192,10 +195,11 @@ struct TreemapView: View {
     var onTrash: (DiskScanEntry) -> Void = { _ in }
     @State private var hoveredID: String?
 
+    /// One quiet family. Cells differ by lightness, not by a rainbow.
     private static let palette: [Color] = [
-        Color(hex: 0x4FA3E3), Color(hex: 0x57C2A5), Color(hex: 0xE6A93C),
-        Color(hex: 0xF0884E), Color(hex: 0x8E84F0), Color(hex: 0x5AA8F0),
-        Color(hex: 0xE0667E), Color(hex: 0x6FB06A),
+        Color(hex: 0x8AA0B8), Color(hex: 0x7E9A90), Color(hex: 0xA39880),
+        Color(hex: 0x8E8AA3), Color(hex: 0x9A8B86), Color(hex: 0x7F95A6),
+        Color(hex: 0x8A9688), Color(hex: 0x9690A0),
     ]
 
     var body: some View {
@@ -264,11 +268,11 @@ struct TreemapView: View {
         guard cell.width > 1, cell.height > 1 else { return }
         let path = Path(roundedRect: cell, cornerRadius: 4, style: .continuous)
         ctx.fill(path, with: .linearGradient(
-            Gradient(colors: [color.opacity(isHover ? 0.95 : 0.8),
-                              color.opacity(isHover ? 0.7 : 0.55)]),
+            Gradient(colors: [color.opacity(isHover ? 0.55 : 0.38),
+                              color.opacity(isHover ? 0.28 : 0.16)]),
             startPoint: CGPoint(x: cell.midX, y: cell.minY),
             endPoint: CGPoint(x: cell.midX, y: cell.maxY)))
-        ctx.stroke(path, with: .color(isHover ? .white.opacity(0.6) : .black.opacity(0.25)), lineWidth: 1)
+        ctx.stroke(path, with: .color(Color.white.opacity(isHover ? 0.45 : 0.16)), lineWidth: 0.6)
 
         guard cell.width > 66, cell.height > 28 else { return }
         var label = ctx

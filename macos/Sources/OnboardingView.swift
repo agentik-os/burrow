@@ -36,9 +36,7 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            VisualEffectBackground().ignoresSafeArea()
-            Brand.windowVeil.ignoresSafeArea()
-            Brand.ambientGlow.ignoresSafeArea()
+            Brand.canvas.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 progressDashes.padding(.top, 26)
@@ -230,22 +228,17 @@ struct OnboardingView: View {
 
     // MARK: - Shared bits
 
-    /// Burrow mark in a circular chip on a ring motif — the radial-gradient
-    /// circle glyph style Analyze's sidebar uses, with the menu-bar mark inside.
+    /// Monochrome mark on a flat chip — same language as the sidebar.
     private var heroMark: some View {
         ZStack {
             Circle()
-                .strokeBorder(Brand.hairline, lineWidth: 1)
-                .frame(width: 124, height: 124)
+                .fill(Brand.cardFill)
+                .frame(width: 88, height: 88)
             Circle()
-                .fill(RadialGradient(colors: [Brand.cream.opacity(0.9), Brand.cream.opacity(0.12)],
-                                     center: .init(x: 0.4, y: 0.35), startRadius: 2, endRadius: 64))
-                .frame(width: 86, height: 86)
-                .shadow(color: Brand.cream.opacity(0.35), radius: 26)
-            Image(nsImage: BurrowIcons.menuBar)
-                .renderingMode(.template)
-                .resizable().frame(width: 34, height: 34)
-                .foregroundStyle(Brand.espresso)
+                .strokeBorder(Brand.hairline, lineWidth: 1)
+                .frame(width: 88, height: 88)
+            BurrowMark()
+                .frame(width: 36, height: 36)
         }
         .accessibilityHidden(true)
     }

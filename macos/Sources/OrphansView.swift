@@ -26,7 +26,7 @@ struct OrphansView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            toolbar.padding(.horizontal, 18).padding(.top, 4).padding(.bottom, 12)
+            toolbar.padding(.horizontal, Brand.pageInset).padding(.top, 16).padding(.bottom, 14)
             Rectangle().fill(Brand.hairline).frame(height: 1)
             ZStack {
                 if !BurrowEngine.isAvailable {
@@ -195,7 +195,7 @@ struct OrphansView: View {
                 }
                 Spacer()
             }
-            .padding(.horizontal, 18).padding(.top, 14).padding(.bottom, 10)
+            .padding(.horizontal, Brand.pageInset).padding(.top, 14).padding(.bottom, 10)
             ScrollView {
                 LazyVStack(spacing: 10) {
                     ForEach(tiers(report), id: \.name) { tier in
@@ -203,7 +203,7 @@ struct OrphansView: View {
                     }
                     Color.clear.frame(height: 16)
                 }
-                .padding(.horizontal, 18).padding(.bottom, 6)
+                .padding(.horizontal, Brand.pageInset).padding(.bottom, 6)
             }
             .scrollIndicators(.hidden)
         }

@@ -85,7 +85,7 @@ struct TuneUpView: View {
         VStack(spacing: 20) {
             Spacer()
             ZStack {
-                HeroOrb(accent: accent, size: 120)
+                HeroOrb(accent: Brand.textPrimary, size: 120, glyph: Tool.tuneup.glyph)
                 ProgressView().controlSize(.large).tint(.white)
             }
             VStack(spacing: 6) {
@@ -369,7 +369,7 @@ struct TuneUpView: View {
                 }.buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 18).padding(.top, 8).padding(.bottom, 12)
+        .padding(.horizontal, Brand.pageInset).padding(.top, 16).padding(.bottom, 14)
     }
 
     private var runStatusText: String {

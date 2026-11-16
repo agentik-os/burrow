@@ -11,8 +11,8 @@
 import SwiftUI
 
 struct GlassCard<Content: View>: View {
-    var padding: CGFloat = 16
-    var corner: CGFloat = 20
+    var padding: CGFloat = Brand.cardPadding
+    var corner: CGFloat = Brand.radiusCard
     var minHeight: CGFloat? = nil
     @ViewBuilder var content: () -> Content
 
@@ -20,29 +20,22 @@ struct GlassCard<Content: View>: View {
         content()
             .padding(padding)
             .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
-            // Borderless: a soft filled surface + a whisper of elevation reads
-            // cleaner than ruled boxes — fewer lines, the fill does the work.
-            .background(
-                RoundedRectangle(cornerRadius: corner, style: .continuous)
-                    .fill(Brand.cardFill)
-            )
-            .shadow(color: .black.opacity(0.06), radius: 7, x: 0, y: 2)
+            .glassTile(corner: corner)
     }
 }
 
-/// Tiny uppercase section label with a leading glyph — "☼ HEALTH".
+/// Section label with a leading glyph. Sentence case, same size everywhere.
 struct Eyebrow: View {
     let text: String
     let glyph: String
     var color: Color = Brand.textSecondary
 
     var body: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: 6) {
             Image(systemName: glyph)
-                .font(.system(size: Brand.scaled(9), weight: .bold))
-            Text(NSLocalizedString(text, comment: "").uppercased())
-                .font(Brand.mono(10, .bold))
-                .tracking(1.0)
+                .font(.system(size: Brand.scaled(12), weight: .regular))
+            Text(NSLocalizedString(text, comment: ""))
+                .font(Brand.sans(13, .medium))
         }
         .foregroundStyle(color)
     }
@@ -55,10 +48,13 @@ struct Chip: View {
 
     var body: some View {
         Text(NSLocalizedString(text, comment: ""))
-            .font(Brand.mono(10, .medium))
+            .font(Brand.sans(11, .medium))
             .foregroundStyle(color)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2.5)
-            .background(Capsule().fill(color.opacity(0.16)))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(color.opacity(0.12))
+            )
     }
 }
