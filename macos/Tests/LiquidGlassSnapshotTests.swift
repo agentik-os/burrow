@@ -22,7 +22,9 @@ final class LiquidGlassSnapshotTests: XCTestCase {
 
     func testWritePopoverContrastSnapshotsWhenRequested() throws {
         let dir = try snapshotDirectory()
-        let size = CGSize(width: 720, height: 980)
+        // Tall enough for the full default HUD (all popupGrid tiles + battery
+        // rings + 4 processes + all tool pills + Clean Watch + MCP footer).
+        let size = CGSize(width: 760, height: 1480)
         try write(PopoverOnWallpaper(wallpaper: .brightStriped),
                   name: "popover-contrast-bright-wallpaper", scheme: .light, dir: dir, size: size)
         try write(PopoverOnWallpaper(wallpaper: .darkBusy),
@@ -96,19 +98,22 @@ private enum SnapshotWallpaper {
     case brightStriped, darkBusy
 }
 
-/// Static HUD chrome over a busy wallpaper — proves panel scrim + denser
-/// cards + semantic foregrounds without needing a live MoleStatus.
+/// Full default HUD chrome over a busy wallpaper — field parity with
+/// `PopupView` defaults (`MenuBarMetric.popupGrid` + battery + 4 processes +
+/// utility + Clean Watch + every tool pill + MCP). Contrast-only materials;
+/// no live MoleStatus required.
 private struct PopoverOnWallpaper: View {
     let wallpaper: SnapshotWallpaper
+    private let spark = [0.2, 0.35, 0.28, 0.55, 0.4, 0.62, 0.48, 0.7]
 
     var body: some View {
         ZStack {
             wallpaperView
-            VStack {
-                Spacer(minLength: 36)
+            ScrollView {
                 hud
                     .padding(.horizontal, 48)
-                Spacer(minLength: 36)
+                    .padding(.vertical, 36)
+                    .frame(maxWidth: .infinity)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -125,6 +130,7 @@ private struct PopoverOnWallpaper: View {
 
     private var hud: some View {
         VStack(alignment: .leading, spacing: 9) {
+            // Header — health + headline + free space
             HStack(spacing: 8) {
                 Image(systemName: "checkmark.seal.fill")
                     .font(.system(size: 13)).foregroundStyle(Brand.green)
@@ -136,6 +142,7 @@ private struct PopoverOnWallpaper: View {
                     .foregroundStyle(.tertiary)
             }
 
+            // Chips — chip · RAM · macOS · uptime
             HStack(spacing: 5) {
                 Chip(text: "M3 Pro", color: Brand.textSecondary)
                 Chip(text: "36 GB", color: Brand.textSecondary)
@@ -144,67 +151,108 @@ private struct PopoverOnWallpaper: View {
                 Spacer()
             }
 
+            // Metric grid — exact default popupGrid order
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
                 sampleTile(eyebrow: "CPU", glyph: "cpu", accent: Brand.green, value: "24", unit: "%",
-                           chip: ("48°C", Brand.orange), footnote: "load 1.42")
+                           chip: ("48°C", Brand.orange), footnote: "load 1.42", chart: .bars)
+                sampleTile(eyebrow: "GPU", glyph: "cpu.fill", accent: Brand.orange, value: "31", unit: "%",
+                           chip: ("52°C", Brand.orange), footnote: "M3 Pro", chart: .bars)
                 sampleTile(eyebrow: "Memory", glyph: "memorychip", accent: Brand.amber, value: "61", unit: "%",
-                           chip: ("61%", Brand.amber), footnote: "22.0/36 GB · swap 0.4 GB")
+                           chip: ("61%", Brand.amber), footnote: "22.0/36 GB · swap 0.4 GB", chart: .area)
+                diskTile
                 sampleTile(eyebrow: "Network", glyph: "network", accent: Brand.green, value: "8.4", unit: "MB/s",
-                           chip: ("en0", Brand.blue), footnote: "↓ 4200 ↑ 180 KB/s")
+                           chip: ("en0", Brand.blue), footnote: "↓ 4200 ↑ 180 KB/s", chart: .area)
                 sampleTile(eyebrow: "Fan", glyph: "fan", accent: PowerAccent.fan, value: "1200", unit: "RPM",
-                           chip: ("2 fans", Brand.textSecondary), footnote: "macOS manages speed")
+                           chip: ("2 fans", Brand.textSecondary), footnote: "macOS manages speed", chart: .area)
             }
 
+            // Battery — rings + top drain (matches PopupView.batteryCard)
             VStack(alignment: .leading, spacing: 7) {
                 HStack(spacing: 8) {
                     Eyebrow(text: "Battery", glyph: "battery.100", color: Brand.green)
                     Spacer()
                     Chip(text: "100% Health", color: Brand.green)
                 }
-                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text("78%").font(Brand.mono(16, .semibold)).foregroundStyle(.primary)
-                    Text("4:12 left").font(Brand.mono(10)).foregroundStyle(.secondary)
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(alignment: .firstTextBaseline, spacing: 3) {
+                            Text("78%").font(Brand.mono(16, .semibold)).foregroundStyle(.primary)
+                            Text("4:12 left").font(Brand.mono(10)).foregroundStyle(.secondary)
+                        }
+                        Text("342 cyc · 31°C").font(Brand.mono(9)).foregroundStyle(.tertiary)
+                    }
+                    Spacer()
+                    HStack(spacing: 8) {
+                        RingGauge(percent: 78, color: Brand.green, glyph: "laptopcomputer",
+                                  label: "Mac", size: 34)
+                        RingGauge(percent: 64, color: Brand.green, glyph: "headphones",
+                                  label: "AirPods", size: 34)
+                        RingGauge(percent: 42, color: Brand.amber, glyph: "magicmouse.fill",
+                                  label: "Mouse", size: 34)
+                    }
                 }
-                Text("342 cyc · 31°C").font(Brand.mono(9)).foregroundStyle(.tertiary)
+                HStack(spacing: 5) {
+                    Image(systemName: "bolt.fill").font(.system(size: 9)).foregroundStyle(Brand.gold)
+                    Text("Top drain — Cursor · avg 18% CPU over the last hour")
+                        .font(Brand.mono(9)).foregroundStyle(.secondary).lineLimit(1)
+                }
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(LiquidGlassMaterials.cardFill))
+            .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
 
+            // Top processes — 4 rows + ellipsis affordance
             VStack(alignment: .leading, spacing: 5) {
                 Eyebrow(text: "Top processes", glyph: "list.bullet", color: Brand.textSecondary)
                 processRow("Cursor", cpu: 18.2, mem: "1.4 GB")
                 processRow("WindowServer", cpu: 9.1, mem: "420 MB")
                 processRow("Safari", cpu: 4.6, mem: "890 MB")
+                processRow("node", cpu: 3.1, mem: "310 MB")
             }
 
+            // Utility strip
             HStack(spacing: 6) {
                 utility("cup.and.saucer.fill", "Stay Awake")
                 utility("rectangle.inset.filled", "Wipe")
+                utility("eject.fill", "Eject")
                 Spacer()
             }
 
             Rectangle().fill(Brand.hairline).frame(height: 1)
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 5), spacing: 6) {
-                ForEach(Array(Tool.navOrder.prefix(5))) { tool in
-                    Image(systemName: tool.glyph)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(tool.accent)
-                        .frame(maxWidth: .infinity, minHeight: 26)
-                        .background(Capsule().fill(LiquidGlassMaterials.chipFill))
-                        .overlay(Capsule().strokeBorder(tool.accent.opacity(0.45), lineWidth: 0.75))
+            // Footer — Clean Watch + every tool + Open Burrow + MCP
+            VStack(spacing: 8) {
+                HStack(spacing: 10) {
+                    Eyebrow(text: "Clean Watch", glyph: "sparkles", color: Tool.clean.accent)
+                    Spacer()
+                    Text("12.4 GB cleaned · 3 uninstalled · 8 optimized")
+                        .font(Brand.mono(9)).foregroundStyle(.secondary)
                 }
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 5), spacing: 6) {
+                    ForEach(Tool.navOrder) { tool in
+                        Image(systemName: tool.glyph)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(tool.accent)
+                            .frame(maxWidth: .infinity, minHeight: 26)
+                            .background(Capsule().fill(LiquidGlassMaterials.chipFill))
+                            .overlay(Capsule().strokeBorder(tool.accent.opacity(0.45), lineWidth: 0.75))
+                    }
+                }
+                HStack(spacing: 12) {
+                    Image(systemName: "clock.arrow.circlepath").font(.system(size: 12)).foregroundStyle(.secondary)
+                    Image(systemName: "gearshape").font(.system(size: 12)).foregroundStyle(.secondary)
+                    Spacer()
+                    Text("Open Burrow").font(Brand.sans(11, .semibold)).foregroundStyle(.primary)
+                    Image(systemName: "power").font(.system(size: 12)).foregroundStyle(.secondary)
+                }
+                Text(verbatim: "MCP · stdio (burrow --mcp)")
+                    .font(Brand.mono(9)).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-
-            Text(verbatim: "MCP · stdio (burrow --mcp)")
-                .font(Brand.mono(9)).foregroundStyle(.secondary)
         }
         .padding(13)
         .frame(width: 334)
-        // Always paint the production scrim (and an opaque card plane) so
-        // CI on macOS 15 proves contrast the same way macOS 26+ does under
-        // Regular glass. liquidGlassPanel is a no-op before 26.
         .background {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(LiquidGlassMaterials.panelScrim)
@@ -217,9 +265,30 @@ private struct PopoverOnWallpaper: View {
         .shadow(color: .black.opacity(0.28), radius: 24, y: 10)
     }
 
+    private var diskTile: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 4) {
+                Eyebrow(text: "Disk", glyph: "internaldrive", color: Brand.blue)
+                Spacer(minLength: 2)
+                Chip(text: "1 TB", color: Brand.textSecondary)
+            }
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text("128 GB").font(Brand.mono(15, .semibold)).foregroundStyle(.primary)
+                Text("free").font(Brand.mono(9)).foregroundStyle(.secondary)
+            }
+            LowSpaceBar(fraction: 0.72).frame(height: 4)
+            Text("872 GB used · 72%").font(Brand.mono(8.5)).foregroundStyle(.tertiary).lineLimit(1)
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(LiquidGlassMaterials.cardFill))
+        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
+    }
+
     private func sampleTile(eyebrow: String, glyph: String, accent: Color,
                             value: String, unit: String,
-                            chip: (String, Color), footnote: String) -> some View {
+                            chip: (String, Color), footnote: String,
+                            chart: MiniChart.Style) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 4) {
                 Eyebrow(text: eyebrow, glyph: glyph, color: accent)
@@ -230,7 +299,7 @@ private struct PopoverOnWallpaper: View {
                 Text(value).font(Brand.mono(15, .semibold)).foregroundStyle(.primary)
                 Text(unit).font(Brand.mono(9)).foregroundStyle(.secondary)
             }
-            MiniChart(values: [0.2, 0.35, 0.28, 0.55, 0.4, 0.62, 0.48, 0.7], color: accent, style: .area)
+            MiniChart(values: spark, color: accent, style: chart)
                 .frame(height: 13)
             Text(footnote).font(Brand.mono(8.5)).foregroundStyle(.tertiary).lineLimit(1)
         }
@@ -255,6 +324,8 @@ private struct PopoverOnWallpaper: View {
             Text(String(format: "%.1f%%", cpu)).font(Brand.mono(10)).foregroundStyle(.secondary)
             Text(mem).font(Brand.mono(10)).foregroundStyle(.tertiary)
                 .frame(width: 52, alignment: .trailing)
+            Image(systemName: "ellipsis").font(.system(size: 10)).foregroundStyle(.secondary)
+                .frame(width: 16, height: 16)
         }
     }
 
