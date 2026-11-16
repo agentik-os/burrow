@@ -224,14 +224,14 @@ private struct HistoryMetric: Identifiable {
     func primary(_ s: HistorySnapshot) -> [Double] { series(s).first?.points.map(\.value) ?? [] }
 
     static let all: [HistoryMetric] = [
-        .init(id: "cpu", title: "CPU usage", color: Brand.green, marks: .bars,
+        .init(id: "cpu", title: "CPU usage", color: Brand.green, marks: .line,
               unit: { _ in "%" }, series: { [("usage", $0.cpuUsage, Brand.green)] }),
         .init(id: "load", title: "CPU load", color: Brand.orange, marks: .line,
               unit: { _ in "1m avg" }, series: { [("load1", $0.cpuLoad1, Brand.orange)] }),
         .init(id: "mem", title: "Memory", color: Brand.amber, marks: .line,
               unit: { $0.memoryPressure.isEmpty ? "% used" : $0.memoryPressure },
               series: { [("used", $0.memoryUsed, Brand.amber)] }),
-        .init(id: "gpu", title: "GPU usage", color: Brand.orange, marks: .bars,
+        .init(id: "gpu", title: "GPU usage", color: Brand.orange, marks: .line,
               unit: { _ in "%" }, series: { [("gpu", $0.gpuUsage, Brand.orange)] }),
         .init(id: "disk", title: "Disk I/O", color: Brand.blue, marks: .line,
               unit: { _ in "MB/s" },
@@ -248,7 +248,7 @@ private struct HistoryMetric: Identifiable {
               series: { [("fan", $0.fanSpeed, Color(hex: 0x6EC1E4))] }),
         .init(id: "battery", title: "Battery", color: Brand.green, marks: .line,
               unit: { _ in "%" }, series: { [("charge", $0.batteryPercent, Brand.green)] }),
-        .init(id: "health", title: "Health score", color: Brand.gold, marks: .bars,
+        .init(id: "health", title: "Health score", color: Brand.gold, marks: .line,
               unit: { _ in "0–100" }, series: { [("health", $0.healthScore, Brand.gold)] }),
     ]
 }
@@ -394,10 +394,10 @@ struct HistoryView: View {
         return GlassCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(NSLocalizedString(m.title, comment: "").uppercased())
-                        .font(Brand.mono(11, .bold)).tracking(1.0).foregroundStyle(m.color)
+                    Text(NSLocalizedString(m.title, comment: ""))
+                        .font(Brand.sans(15, .semibold)).foregroundStyle(Brand.textPrimary)
                     Text(NSLocalizedString(m.unit(snapshot), comment: ""))
-                        .font(Brand.mono(10)).foregroundStyle(Brand.textTertiary)
+                        .font(Brand.sans(12)).foregroundStyle(Brand.textTertiary)
                     Spacer()
                     if series.count > 1 { legend(series) }
                 }
@@ -411,7 +411,7 @@ struct HistoryView: View {
             ForEach(series, id: \.name) { s in
                 HStack(spacing: 4) {
                     Circle().fill(s.color).frame(width: 6, height: 6)
-                    Text(s.name).font(Brand.mono(9)).foregroundStyle(Brand.textTertiary)
+                    Text(s.name).font(Brand.sans(11)).foregroundStyle(Brand.textSecondary)
                 }
             }
         }
@@ -429,27 +429,26 @@ struct HistoryView: View {
             VStack(alignment: .leading, spacing: 7) {
                 HStack(spacing: 5) {
                     Circle().fill(m.color).frame(width: 6, height: 6)
-                    Text(NSLocalizedString(m.title, comment: "").uppercased())
-                        .font(Brand.mono(9, .bold)).tracking(0.6)
+                    Text(NSLocalizedString(m.title, comment: ""))
+                        .font(Brand.sans(12, .medium))
                         .foregroundStyle(on ? Brand.textPrimary : Brand.textSecondary).lineLimit(1)
                     Spacer(minLength: 0)
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(m.summary(snapshot)).font(Brand.mono(17, .semibold)).foregroundStyle(Brand.textPrimary)
-                    Text(NSLocalizedString(m.unit(snapshot), comment: "")).font(Brand.mono(8))
+                    Text(m.summary(snapshot)).font(Brand.mono(18, .semibold)).foregroundStyle(Brand.textPrimary)
+                    Text(NSLocalizedString(m.unit(snapshot), comment: "")).font(Brand.sans(11))
                         .foregroundStyle(Brand.textTertiary).lineLimit(1)
                 }
-                MiniChart(values: m.primary(snapshot), color: m.color, style: m.marks == .bars ? .bars : .area)
-                    .frame(height: 22)
+                MiniChart(values: m.primary(snapshot), color: m.color, style: .area)
+                    .frame(height: 32)
             }
             .padding(11)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(on ? Brand.cardFillHover : Brand.cardFill))
+            .glassTile(corner: 14)
             .overlay {
                 if on {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(m.color.opacity(0.55), lineWidth: 1.5)
+                        .strokeBorder(Brand.textPrimary.opacity(0.28), lineWidth: 1)
                 }
             }
         }
@@ -465,9 +464,12 @@ struct HistoryView: View {
         let strideSec = max(1.0, window / 720.0)
         let gapThreshold = max(Double(Store.sampleIntervalSeconds), strideSec) * 3.5
         if allEmpty {
-            Text("No samples in this window")
-                .font(Brand.mono(11)).foregroundStyle(Brand.textTertiary)
-                .frame(maxWidth: .infinity, minHeight: height)
+            VStack(spacing: 8) {
+                Capsule().fill(Brand.trackFill).frame(width: 120, height: 2)
+                Text("No samples in this window")
+                    .font(Brand.sans(12)).foregroundStyle(Brand.textTertiary)
+            }
+            .frame(maxWidth: .infinity, minHeight: height)
         } else if marks == .bars {
                     // Bars are plotted BY INDEX (like the Status sparklines):
                     // each sample gets an equal slot, so width and gaps are
@@ -530,15 +532,26 @@ struct HistoryView: View {
                 } else {
                     Chart {
                         ForEach(series, id: \.name) { s in
+                            let showArea = series.count == 1
                             ForEach(HistorySegment.split(s.points, name: s.name, gap: gapThreshold)) { p in
+                                if showArea {
+                                    AreaMark(x: .value("Time", p.time), y: .value("Value", p.value),
+                                             series: .value("Series", p.key))
+                                        .foregroundStyle(LinearGradient(
+                                            colors: [s.color.opacity(0.28), s.color.opacity(0)],
+                                            startPoint: .top, endPoint: .bottom))
+                                        .interpolationMethod(.catmullRom)
+                                }
                                 LineMark(x: .value("Time", p.time), y: .value("Value", p.value),
                                          series: .value("Series", p.key))
                                     .foregroundStyle(s.color)
-                                    .interpolationMethod(.monotone)
+                                    .lineStyle(StrokeStyle(lineWidth: 1.75, lineCap: .round, lineJoin: .round))
+                                    .interpolationMethod(.catmullRom)
                             }
                         }
                     }
                     .chartXScale(domain: snapshot.windowSince...snapshot.windowUntil)
+                    .chartLegend(.hidden)
                     .chartOverlay { proxy in
                         GeometryReader { geo in
                             dragSelectOverlay(title: title, metric: spikeMetric(for: title),
@@ -547,15 +560,18 @@ struct HistoryView: View {
                     }
                     .chartXAxis {
                         AxisMarks(values: .automatic(desiredCount: style.desiredCount)) { _ in
-                            AxisGridLine().foregroundStyle(Brand.hairline)
-                            AxisValueLabel(format: style.format).foregroundStyle(Brand.textTertiary)
-                                .font(Brand.mono(8))
+                            AxisValueLabel(format: style.format)
+                                .foregroundStyle(Brand.textTertiary)
+                                .font(Brand.sans(10))
                         }
                     }
                     .chartYAxis {
-                        AxisMarks { _ in
-                            AxisGridLine().foregroundStyle(Brand.hairline)
-                            AxisValueLabel().foregroundStyle(Brand.textTertiary).font(Brand.mono(8))
+                        AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { _ in
+                            AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+                                .foregroundStyle(Brand.hairline.opacity(0.8))
+                            AxisValueLabel()
+                                .foregroundStyle(Brand.textTertiary)
+                                .font(Brand.sans(10))
                         }
                     }
                     .frame(height: height)

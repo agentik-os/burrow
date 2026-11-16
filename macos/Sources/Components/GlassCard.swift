@@ -20,14 +20,7 @@ struct GlassCard<Content: View>: View {
         content()
             .padding(padding)
             .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
-            .background(
-                RoundedRectangle(cornerRadius: corner, style: .continuous)
-                    .fill(Brand.cardFill)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: corner, style: .continuous)
-                    .strokeBorder(Brand.hairline, lineWidth: 1)
-            )
+            .glassTile(corner: corner)
     }
 }
 

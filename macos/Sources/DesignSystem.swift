@@ -8,6 +8,87 @@
 
 import SwiftUI
 
+/// Soft glass tile. macOS 26+ uses the system Liquid Glass effect; earlier
+/// systems fall back to a thin material with a faint specular edge.
+struct GlassBackground: ViewModifier {
+    var corner: CGFloat = Brand.radiusCard
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: corner, style: .continuous)
+        if #available(macOS 26, *) {
+            content
+                .glassEffect(.regular, in: shape)
+                .overlay(specular(shape))
+        } else {
+            content
+                .background(shape.fill(.ultraThinMaterial))
+                .overlay(specular(shape))
+        }
+    }
+
+    private func specular(_ shape: RoundedRectangle) -> some View {
+        shape.strokeBorder(
+            LinearGradient(
+                colors: [Color.white.opacity(0.38), Color.white.opacity(0.05)],
+                startPoint: .top, endPoint: .bottom),
+            lineWidth: 0.7)
+    }
+}
+
+extension View {
+    func glassTile(corner: CGFloat = Brand.radiusCard) -> some View {
+        modifier(GlassBackground(corner: corner))
+    }
+}
+
+/// Circular quick action. Liquid Glass on macOS 26+, a material circle before that.
+struct GlassCircleButton: View {
+    let systemName: String
+    var helpText: String
+    let action: () -> Void
+
+    var body: some View {
+        if #available(macOS 26, *) {
+            Button(action: action) {
+                Image(systemName: systemName)
+                    .font(.system(size: Brand.scaled(13), weight: .medium))
+                    .frame(width: 34, height: 34)
+            }
+            .buttonStyle(.glass)
+            .buttonBorderShape(.circle)
+            .foregroundStyle(Brand.textPrimary)
+            .help(helpText)
+            .accessibilityLabel(helpText)
+        } else {
+            Button(action: action) {
+                Image(systemName: systemName)
+                    .font(.system(size: Brand.scaled(13), weight: .medium))
+                    .foregroundStyle(Brand.textPrimary)
+                    .frame(width: 34, height: 34)
+                    .background(Circle().fill(.ultraThinMaterial))
+                    .overlay(Circle().strokeBorder(Color.white.opacity(0.28), lineWidth: 0.6))
+            }
+            .buttonStyle(.plain)
+            .help(helpText)
+            .accessibilityLabel(helpText)
+        }
+    }
+}
+
+/// Groups neighbouring glass shapes so they share one specular field.
+struct GlassGroup<Content: View>: View {
+    var spacing: CGFloat = 8
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        if #available(macOS 26, *) {
+            GlassEffectContainer(spacing: spacing) { content() }
+        } else {
+            content()
+        }
+    }
+}
+
 /// Quiet segmented control: a gray track with a raised selection, not an
 /// inverted black pill. `badge` is an optional count drawn after the title.
 struct SegmentedPills<Item: Hashable>: View {

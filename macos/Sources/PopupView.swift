@@ -94,7 +94,7 @@ struct PopupView: View {
         // keeps roughly the same line lengths instead of wrapping everywhere.
         // HUDController sizes the popover from the same number.
         .frame(width: Brand.scaled(334))
-        .background(Brand.canvas)
+        .background(.ultraThinMaterial)
         .fixedSize(horizontal: false, vertical: true)
         // Three task-scoped subscriptions replace the old 1 s + 20 s timer
         // pair (issue #53): the snapshot and sparkline pumps are shared with
@@ -201,8 +201,7 @@ struct PopupView: View {
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Brand.cardFill))
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
+        .glassTile(corner: 12)
     }
 
     private var runningCount: Int { ops.ops.filter { $0.phase == .running }.count }
@@ -293,21 +292,21 @@ struct PopupView: View {
         let tiles = Store.popupTiles   // which tiles the user wants (issue #82)
         return LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
             if tiles.contains(.cpu) {
-                ValueTile(variant: .hud, eyebrow: "CPU", glyph: "cpu", accent: Brand.green,
+                ValueTile(variant: .hud, eyebrow: "CPU", glyph: "cpu", accent: Brand.accent,
                           value: String(format: "%.0f", s.cpu.usage), unit: "%",
-                          chip: (s.thermal?.cpuTemp).flatMap { $0 > 0 ? (String(format: "%.0f°C", $0), Brand.orange) : nil },
-                          values: model.cpuHist, chartStyle: .bars,
+                          chip: (s.thermal?.cpuTemp).flatMap { $0 > 0 ? (String(format: "%.0f°C", $0), Brand.amber) : nil },
+                          values: model.cpuHist, chartStyle: .area,
                           footnote: String(format: "load %.2f", s.cpu.load1))
             }
             if tiles.contains(.gpu) {
-                ValueTile(variant: .hud, eyebrow: "GPU", glyph: "cpu.fill", accent: Brand.orange,
+                ValueTile(variant: .hud, eyebrow: "GPU", glyph: "cpu.fill", accent: Brand.accent,
                           value: gpuValue(s).0, unit: gpuValue(s).1,
-                          chip: (s.thermal?.gpuTemp).flatMap { $0 > 0 ? (String(format: "%.0f°C", $0), Brand.orange) : nil },
-                          values: model.gpuHist, chartStyle: .bars,
+                          chip: (s.thermal?.gpuTemp).flatMap { $0 > 0 ? (String(format: "%.0f°C", $0), Brand.amber) : nil },
+                          values: model.gpuHist, chartStyle: .area,
                           footnote: (s.gpu?.first?.name ?? "GPU").replacingOccurrences(of: "Apple ", with: ""))
             }
             if tiles.contains(.memory) {
-                ValueTile(variant: .hud, eyebrow: "Memory", glyph: "memorychip", accent: MemoryPressure.tint(percent: MemoryPressure.percent()),
+                ValueTile(variant: .hud, eyebrow: "Memory", glyph: "memorychip", accent: Brand.accent,
                           value: String(format: "%.0f", s.memory.usedPercent), unit: "%",
                           chip: memChip(s),
                           values: model.memHist, chartStyle: .area,
@@ -316,7 +315,7 @@ struct PopupView: View {
             }
             if tiles.contains(.diskUsage) { diskTile(s) }
             if tiles.contains(.network) {
-                ValueTile(variant: .hud, eyebrow: "Network", glyph: "network", accent: Brand.green,
+                ValueTile(variant: .hud, eyebrow: "Network", glyph: "network", accent: Brand.accent,
                           value: netValue(s).0, unit: netValue(s).1,
                           chip: (s.network.first(where: { !$0.ip.isEmpty })?.name).map { ($0, Brand.blue) },
                           values: model.netHist, chartStyle: .area,
@@ -333,23 +332,22 @@ struct PopupView: View {
         let pct = disk?.usedPercent ?? 0
         return VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 4) {
-                Eyebrow(text: "Disk", glyph: "internaldrive", color: Brand.blue)
+                Eyebrow(text: "Disk", glyph: "internaldrive", color: Brand.textSecondary)
                 Spacer(minLength: 2)
                 Chip(text: s.hardware.diskSize, color: Brand.textSecondary)
             }
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(Fmt.bytes(freeBytes)).font(Brand.mono(15, .semibold)).foregroundStyle(Brand.textPrimary)
-                Text("free").font(Brand.mono(9)).foregroundStyle(Brand.textSecondary)
+                Text(Fmt.bytes(freeBytes)).font(Brand.mono(18, .semibold)).foregroundStyle(Brand.textPrimary)
+                Text("free").font(Brand.sans(11)).foregroundStyle(Brand.textSecondary)
             }
             LowSpaceBar(fraction: pct / 100).frame(height: 4)
             Text(String(format: NSLocalizedString("%@ used · %.0f%%", comment: ""),
                         Fmt.bytes(Int64(disk?.used ?? 0)), pct))
-                .font(Brand.mono(8.5)).foregroundStyle(Brand.textTertiary).lineLimit(1)
+                .font(Brand.sans(10)).foregroundStyle(Brand.textTertiary).lineLimit(1)
         }
-        .padding(8)
+        .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Brand.cardFill))
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
+        .glassTile(corner: 12)
     }
 
     /// FAN tile — read-only v1 (same rule as Status: no placebo buttons,
@@ -361,27 +359,26 @@ struct PopupView: View {
         return VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: 4) {
                 // Neutral on purpose — see PowerAccent (Format.swift).
-                Eyebrow(text: "Fan", glyph: "fan", color: PowerAccent.fan)
+                Eyebrow(text: "Fan", glyph: "fan", color: Brand.textSecondary)
                 Spacer(minLength: 2)
                 if fanCount > 0 {
                     Chip(text: String(format: NSLocalizedString("%d fans", comment: ""), fanCount), color: Brand.textSecondary)
                 }
             }
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(fanCount > 0 ? "\(rpm)" : "—").font(Brand.mono(15, .semibold)).foregroundStyle(Brand.textPrimary)
-                if fanCount > 0 { Text("RPM").font(Brand.mono(9)).foregroundStyle(Brand.textSecondary) }
+                Text(fanCount > 0 ? "\(rpm)" : "—").font(Brand.mono(18, .semibold)).foregroundStyle(Brand.textPrimary)
+                if fanCount > 0 { Text("RPM").font(Brand.sans(11)).foregroundStyle(Brand.textSecondary) }
             }
             if fanCount > 0 {
-                MiniChart(values: model.fanHist, color: PowerAccent.fan, style: .area).frame(height: 13)
+                MiniChart(values: model.fanHist, color: Brand.accent, style: .area, allowsFlat: true).frame(height: 22)
             }
             Text(fanCount > 0 ? NSLocalizedString("macOS manages speed", comment: "")
                               : NSLocalizedString("No fan data", comment: ""))
-                .font(Brand.mono(8.5)).foregroundStyle(Brand.textTertiary).lineLimit(1)
+                .font(Brand.sans(10)).foregroundStyle(Brand.textTertiary).lineLimit(1)
         }
-        .padding(8)
+        .padding(10)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Brand.cardFill))
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
+        .glassTile(corner: 12)
     }
 
     private func memChip(_ s: MoleStatus) -> (String, Color)? {
@@ -454,8 +451,7 @@ struct PopupView: View {
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Brand.cardFill))
-            .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
+            .glassTile(corner: 12)
         }
     }
 
@@ -474,20 +470,24 @@ struct PopupView: View {
     private func topProcesses(_ s: MoleStatus) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             Eyebrow(text: "Top processes", glyph: "list.bullet", color: Brand.textSecondary)
-            ForEach(Array((s.topProcesses ?? []).filter { !model.invalidatedProcessIDs.contains($0.pid) }
-                .prefix(4).enumerated()), id: \.offset) { _, p in
+            let rows = Array((s.topProcesses ?? []).filter { !model.invalidatedProcessIDs.contains($0.pid) }.prefix(4))
+            ForEach(Array(rows.enumerated()), id: \.offset) { index, p in
+                if index > 0 {
+                    Rectangle().fill(Brand.hairline).frame(height: 1)
+                }
                 HStack(spacing: 8) {
                     Image(nsImage: AppIcon.image(for: p) ?? PopupView.blankIcon)
-                        .resizable().frame(width: 15, height: 15)
-                        .clipShape(RoundedRectangle(cornerRadius: 3))
-                    Text(p.name).font(Brand.sans(11)).foregroundStyle(Brand.textPrimary).lineLimit(1)
+                        .resizable().frame(width: 16, height: 16)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                    Text(p.name).font(Brand.sans(12)).foregroundStyle(Brand.textPrimary).lineLimit(1)
                     Spacer(minLength: 6)
-                    Text(String(format: "%.1f%%", p.cpu)).font(Brand.mono(10))
-                        .foregroundStyle(p.cpu > 30 ? Brand.orange : Brand.textSecondary)
-                    Text(memText(p)).font(Brand.mono(10)).foregroundStyle(Brand.textTertiary)
-                        .frame(width: 52, alignment: .trailing)
+                    Text(String(format: "%.1f%%", p.cpu)).font(Brand.mono(11))
+                        .foregroundStyle(p.cpu > 50 ? Brand.amber : Brand.textSecondary)
+                    Text(memText(p)).font(Brand.mono(11)).foregroundStyle(Brand.textTertiary)
+                        .frame(width: 56, alignment: .trailing)
                     procMenu(p)
                 }
+                .padding(.vertical, 3)
             }
         }
     }
@@ -578,12 +578,12 @@ struct PopupView: View {
     private func utilityButton(glyph: String, label: String, active: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 5) {
-                Image(systemName: glyph).font(.system(size: Brand.scaled(10), weight: .medium))
-                Text(label).font(Brand.mono(10, .medium))
+                Image(systemName: glyph).font(.system(size: Brand.scaled(11), weight: .medium))
+                Text(label).font(Brand.sans(11, .medium))
             }
-            .foregroundStyle(active ? Brand.gold : Brand.textSecondary)
-            .padding(.horizontal, 9).padding(.vertical, 5)
-            .background(Capsule().fill(active ? Brand.gold.opacity(0.16) : Brand.chipFill))
+            .foregroundStyle(active ? Brand.textPrimary : Brand.textSecondary)
+            .padding(.horizontal, 10).padding(.vertical, 6)
+            .glassTile(corner: 14)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -612,20 +612,17 @@ struct PopupView: View {
             // ~36 px ≈ 360 > ~308 usable), which bled past the frame and read as
             // the popover being shifted left. A flexible grid wraps to as many
             // rows as needed and always fits the width — add more tools freely.
-            LazyVGrid(
-                columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 5),
-                spacing: 6
-            ) {
-                ForEach(Tool.navOrder) { tool in
-                    Button { open(.tool(tool)) } label: {
-                        Image(systemName: tool.glyph)
-                            .font(.system(size: Brand.scaled(12), weight: .medium))
-                            .foregroundStyle(tool.accent)
-                            .frame(maxWidth: .infinity, minHeight: 26)
-                            .background(Capsule().fill(Brand.chipFill))
+            GlassGroup(spacing: 8) {
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 5),
+                    spacing: 8
+                ) {
+                    ForEach(Tool.navOrder) { tool in
+                        GlassCircleButton(systemName: tool.glyph, helpText: tool.title) {
+                            open(.tool(tool))
+                        }
+                        .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.plain)
-                    .help(tool.title)
                 }
             }
             .frame(maxWidth: .infinity)

@@ -20,7 +20,7 @@ concurrency:
 jobs:
   build:
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 70
     defaults:
       run:
         working-directory: macos
@@ -51,6 +51,33 @@ jobs:
       - name: Generate project
         run: xcodegen generate
 
+      # Same source the release cask bundles: the pinned gitlink, cloned from
+      # the public caezium/burrow-engine repo, then cargo-built by the Xcode
+      # bundle phase (BURROW_ENGINE_SRC). A missing binary fails the job.
+      - name: Fetch bundled burrow-engine
+        working-directory: ${{ github.workspace }}
+        env:
+          GIT_TERMINAL_PROMPT: "0"
+        run: |
+          set -euo pipefail
+          SHA="$(git ls-tree HEAD macos/vendor/burrow-engine | awk '$1 == "160000" && $2 == "commit" {print $3}')"
+          if [[ ! "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::no gitlink for macos/vendor/burrow-engine"
+            exit 1
+          fi
+          DEST="$RUNNER_TEMP/burrow-engine"
+          git clone --quiet https://github.com/caezium/burrow-engine.git "$DEST"
+          git -C "$DEST" -c advice.detachedHead=false checkout --quiet "$SHA"
+          echo "BURROW_ENGINE_SRC=$DEST" >> "$GITHUB_ENV"
+          echo "engine @ ${SHA:0:7}"
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+          source "$HOME/.cargo/env"
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
       - name: Build unsigned Burrow.app
         run: |
           xcodebuild -project Burrow.xcodeproj -scheme Burrow \
@@ -63,6 +90,9 @@ jobs:
             build
           APP="$RUNNER_TEMP/dd/Build/Products/Release/Burrow.app"
           test -d "$APP"
+          test -x "$APP/Contents/Resources/burrow" \
+            || { echo "::error::Resources/burrow missing — burrow-engine did not bundle"; exit 1; }
+          lipo -archs "$APP/Contents/Resources/burrow"
           # Ad-hoc identity. No Developer ID secret is available on this fork.
           bash ../scripts/sign-macos-app.sh "$APP" - adhoc Resources/Burrow.entitlements
           ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/burrow-macos-app.zip"

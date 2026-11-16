@@ -31,8 +31,8 @@ struct StatusView: View {
         self.live = live
     }
 
-    private let row1H: CGFloat = 162
-    private let row2H: CGFloat = 138
+    private let row1H: CGFloat = 176
+    private let row2H: CGFloat = 160
 
     var body: some View {
         ScrollView {
@@ -198,8 +198,8 @@ struct StatusView: View {
                             Text("Idle").font(Brand.sans(11)).foregroundStyle(Brand.textTertiary).padding(.leading, 4)
                         }
                     }
-                    MiniChart(values: model.fanHist, color: PowerAccent.fan, style: .area)
-                        .frame(height: 30)
+                    MiniChart(values: model.fanHist, color: PowerAccent.fan, style: .area, allowsFlat: true)
+                        .frame(height: 40)
                 } else {
                     Text("—").font(Brand.mono(30, .semibold)).foregroundStyle(Brand.textTertiary)
                 }
@@ -255,7 +255,7 @@ struct LiveNetCard: View {
             eyebrow: "Network", glyph: "network", accent: Brand.green,
             value: value, unit: unit, chip: chip,
             values: [],
-            dual: (down: rxHist, up: txHist, downColor: Brand.green, upColor: Brand.blue),
+            dual: (down: rxHist, up: txHist, downColor: Brand.accent, upColor: Brand.accent.opacity(0.45)),
             footnote: "↓ \(Fmt.rate(rx))  ↑ \(Fmt.rate(tx)) · \(snapNet?.name ?? "—") · \(snapNet?.ip ?? "—")")
     }
 }
@@ -314,10 +314,10 @@ struct HealthRing: View {
     let color: Color
     var body: some View {
         ZStack {
-            Circle().stroke(Brand.trackFill, lineWidth: 6)
+            Circle().stroke(Brand.trackFill, lineWidth: 3)
             Circle()
                 .trim(from: 0, to: CGFloat(max(0, min(score, 100))) / 100)
-                .stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             Text("\(score)").font(Brand.mono(14, .semibold)).foregroundStyle(Brand.textPrimary)
         }
@@ -481,10 +481,10 @@ struct RingGauge: View {
     var body: some View {
         VStack(spacing: 3) {
             ZStack {
-                Circle().stroke(Brand.trackFill, lineWidth: 4)
+                Circle().stroke(Brand.trackFill, lineWidth: 2.5)
                 Circle()
                     .trim(from: 0, to: CGFloat(max(0, min(percent, 100))) / 100)
-                    .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .stroke(color, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
                     .rotationEffect(.degrees(-90))
                 Image(systemName: glyph).font(.system(size: size * 0.3)).foregroundStyle(Brand.textSecondary)
             }
@@ -511,7 +511,7 @@ struct LowSpaceBar: View {
                     .frame(width: g.size.width * CGFloat(max(0, min(fraction, 1))))
             }
         }
-        .frame(height: 6)
+        .frame(height: 4)
     }
 
     private var fill: Color {

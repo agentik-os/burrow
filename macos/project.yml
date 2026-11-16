@@ -153,6 +153,8 @@ targets:
           # freshly-added binary and the resource seal ends up stale. The final seal therefore
           # happens POST-build: use scripts/build.sh locally, and the release pipeline's inside-out
           # re-sign (#178) seals it for distribution.
+          # rustup installs cargo outside the default Xcode script PATH.
+          export PATH="${HOME}/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:${PATH}"
           ENGINE_SRC="${BURROW_ENGINE_SRC:-$SRCROOT/vendor/burrow-engine}"
           # Require a real engine checkout, not just the gitlink dir: a plain (no-submodule)
           # checkout — e.g. the PR `ci` job — leaves an EMPTY vendor/burrow-engine dir, so `[ -d ]`
