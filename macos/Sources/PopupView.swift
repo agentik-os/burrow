@@ -94,13 +94,20 @@ struct PopupView: View {
         // keeps roughly the same line lengths instead of wrapping everywhere.
         // HUDController sizes the popover from the same number.
         .frame(width: Brand.scaled(334))
-        // Warm tactile ground + grain, matching the main window — the HUD used
-        // to ride bare popover material and read as unfinished beside it.
+        // Regular Liquid Glass + adaptive scrim (Axiom legibility): wallpaper
+        // must not punch through titles / secondary copy. Pre-26 keeps the
+        // painted veil + grain. Reduce Transparency / Increase Contrast bump
+        // the scrim inside `liquidGlassPanel`.
         .background {
-            Brand.windowVeil
-            Brand.ambientGlow
-            GrainOverlay()
+            if #available(macOS 26, *) {
+                EmptyView()
+            } else {
+                Brand.windowVeil
+                Brand.ambientGlow
+                GrainOverlay()
+            }
         }
+        .liquidGlassPanel(in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .fixedSize(horizontal: false, vertical: true)
         // Three task-scoped subscriptions replace the old 1 s + 20 s timer
         // pair (issue #53): the snapshot and sparkline pumps are shared with
@@ -119,8 +126,8 @@ struct PopupView: View {
             HStack(spacing: 8) {
                 Image(systemName: "checkmark.seal.fill")
                     .font(.system(size: Brand.scaled(13))).foregroundStyle(HealthRating.color(s.healthScore))
-                Text("\(s.healthScore)").font(Brand.mono(16, .semibold)).foregroundStyle(Brand.textPrimary)
-                Text(headline(s)).font(Brand.sans(11)).foregroundStyle(Brand.textSecondary)
+                Text("\(s.healthScore)").font(Brand.mono(16, .semibold)).foregroundStyle(.primary)
+                Text(headline(s)).font(Brand.sans(11)).foregroundStyle(.secondary)
                     .lineLimit(1).truncationMode(.tail)
                 Spacer(minLength: 6)
                 // Render the free-space line unconditionally (empty string when
@@ -132,9 +139,9 @@ struct PopupView: View {
                 // EXC_BAD_ACCESS (Sentry BURROW-9A, same class as the BURROW-K
                 // popover fault).
                 Text(freeSpace(s))
-                    .font(Brand.mono(10)).foregroundStyle(Brand.textTertiary)
+                    .font(Brand.mono(10)).foregroundStyle(.tertiary)
                 Image(systemName: "chevron.right").font(.system(size: Brand.scaled(9), weight: .semibold))
-                    .foregroundStyle(Brand.textTertiary)
+                    .foregroundStyle(.tertiary)
             }
             .contentShape(Rectangle())
         }
@@ -162,9 +169,9 @@ struct PopupView: View {
     private var fallbackHeader: some View {
         HStack(spacing: 7) {
             BurrowMark().frame(width: 18, height: 18)
-            Text("Burrow").font(Brand.sans(13, .semibold)).foregroundStyle(Brand.textPrimary)
+            Text("Burrow").font(Brand.sans(13, .semibold)).foregroundStyle(.primary)
             Spacer()
-            Text(model.freshness).font(Brand.mono(10)).foregroundStyle(Brand.textTertiary)
+            Text(model.freshness).font(Brand.mono(10)).foregroundStyle(.tertiary)
         }
     }
 
@@ -186,7 +193,7 @@ struct PopupView: View {
         HStack(spacing: 8) {
             ProgressView().controlSize(.small)
             Text("Waiting for the first sample…")
-                .font(Brand.mono(11)).foregroundStyle(Brand.textSecondary)
+                .font(Brand.mono(11)).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 14)
@@ -207,7 +214,7 @@ struct PopupView: View {
         }
         .padding(10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Brand.cardFill))
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(LiquidGlassMaterials.cardFill))
         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
     }
 
@@ -219,12 +226,12 @@ struct PopupView: View {
         VStack(alignment: .leading, spacing: 5) {
             HStack(spacing: 8) {
                 opIcon(op.phase, accent: accent)
-                Text(op.label).font(Brand.sans(11, .medium)).foregroundStyle(Brand.textPrimary).lineLimit(1)
+                Text(op.label).font(Brand.sans(11, .medium)).foregroundStyle(.primary).lineLimit(1)
                 Spacer(minLength: 4)
                 opStatus(op)
             }
             if !op.detail.isEmpty {
-                Text(op.detail).font(Brand.mono(9)).foregroundStyle(Brand.textTertiary)
+                Text(op.detail).font(Brand.mono(9)).foregroundStyle(.tertiary)
                     .lineLimit(1).truncationMode(.middle).padding(.leading, 23)
             }
             if op.phase == .running {
@@ -252,7 +259,7 @@ struct PopupView: View {
         case .running:
             TimelineView(.periodic(from: Date(), by: 1)) { ctx in
                 Text(Fmt.elapsed(from: op.startedAt, to: ctx.date))
-                    .font(Brand.mono(9)).foregroundStyle(Brand.textSecondary)
+                    .font(Brand.mono(9)).foregroundStyle(.secondary)
             }
         case .done:
             Text("done").font(Brand.mono(9, .medium)).foregroundStyle(Brand.green)
@@ -344,17 +351,17 @@ struct PopupView: View {
                 Chip(text: s.hardware.diskSize, color: Brand.textSecondary)
             }
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(Fmt.bytes(freeBytes)).font(Brand.mono(15, .semibold)).foregroundStyle(Brand.textPrimary)
-                Text("free").font(Brand.mono(9)).foregroundStyle(Brand.textSecondary)
+                Text(Fmt.bytes(freeBytes)).font(Brand.mono(15, .semibold)).foregroundStyle(.primary)
+                Text("free").font(Brand.mono(9)).foregroundStyle(.secondary)
             }
             LowSpaceBar(fraction: pct / 100).frame(height: 4)
             Text(String(format: NSLocalizedString("%@ used · %.0f%%", comment: ""),
                         Fmt.bytes(Int64(disk?.used ?? 0)), pct))
-                .font(Brand.mono(8.5)).foregroundStyle(Brand.textTertiary).lineLimit(1)
+                .font(Brand.mono(8.5)).foregroundStyle(.tertiary).lineLimit(1)
         }
         .padding(8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Brand.cardFill))
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(LiquidGlassMaterials.cardFill))
         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
     }
 
@@ -374,19 +381,19 @@ struct PopupView: View {
                 }
             }
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(fanCount > 0 ? "\(rpm)" : "—").font(Brand.mono(15, .semibold)).foregroundStyle(Brand.textPrimary)
-                if fanCount > 0 { Text("RPM").font(Brand.mono(9)).foregroundStyle(Brand.textSecondary) }
+                Text(fanCount > 0 ? "\(rpm)" : "—").font(Brand.mono(15, .semibold)).foregroundStyle(.primary)
+                if fanCount > 0 { Text("RPM").font(Brand.mono(9)).foregroundStyle(.secondary) }
             }
             if fanCount > 0 {
                 MiniChart(values: model.fanHist, color: PowerAccent.fan, style: .area).frame(height: 13)
             }
             Text(fanCount > 0 ? NSLocalizedString("macOS manages speed", comment: "")
                               : NSLocalizedString("No fan data", comment: ""))
-                .font(Brand.mono(8.5)).foregroundStyle(Brand.textTertiary).lineLimit(1)
+                .font(Brand.mono(8.5)).foregroundStyle(.tertiary).lineLimit(1)
         }
         .padding(8)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Brand.cardFill))
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(LiquidGlassMaterials.cardFill))
         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
     }
 
@@ -428,13 +435,13 @@ struct PopupView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(alignment: .firstTextBaseline, spacing: 3) {
                             Text(String(format: "%.0f%%", b.percent))
-                                .font(Brand.mono(16, .semibold)).foregroundStyle(Brand.textPrimary)
+                                .font(Brand.mono(16, .semibold)).foregroundStyle(.primary)
                             if !b.timeLeft.isEmpty {
-                                Text(b.timeLeft).font(Brand.mono(10)).foregroundStyle(Brand.textSecondary)
+                                Text(b.timeLeft).font(Brand.mono(10)).foregroundStyle(.secondary)
                             }
                         }
                         Text(batterySubline(b))
-                            .font(Brand.mono(9)).foregroundStyle(Brand.textTertiary)
+                            .font(Brand.mono(9)).foregroundStyle(.tertiary)
                     }
                     Spacer()
                     HStack(spacing: 8) {
@@ -454,13 +461,13 @@ struct PopupView: View {
                         Image(systemName: "bolt.fill").font(.system(size: Brand.scaled(9))).foregroundStyle(Brand.gold)
                         Text(String(format: NSLocalizedString("Top drain — %@ · avg %.0f%% CPU over the last hour", comment: ""),
                                     drain.name, drain.avgCPU))
-                            .font(Brand.mono(9)).foregroundStyle(Brand.textSecondary).lineLimit(1)
+                            .font(Brand.mono(9)).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Brand.cardFill))
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(LiquidGlassMaterials.cardFill))
             .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 1)
         }
     }
@@ -486,11 +493,15 @@ struct PopupView: View {
                     Image(nsImage: AppIcon.image(for: p) ?? PopupView.blankIcon)
                         .resizable().frame(width: 15, height: 15)
                         .clipShape(RoundedRectangle(cornerRadius: 3))
-                    Text(p.name).font(Brand.sans(11)).foregroundStyle(Brand.textPrimary).lineLimit(1)
+                        .background(
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(LiquidGlassMaterials.chipFill)
+                        )
+                    Text(p.name).font(Brand.sans(11)).foregroundStyle(.primary).lineLimit(1)
                     Spacer(minLength: 6)
                     Text(String(format: "%.1f%%", p.cpu)).font(Brand.mono(10))
-                        .foregroundStyle(p.cpu > 30 ? Brand.orange : Brand.textSecondary)
-                    Text(memText(p)).font(Brand.mono(10)).foregroundStyle(Brand.textTertiary)
+                        .foregroundStyle(p.cpu > 30 ? Brand.orange : Color.secondary)
+                    Text(memText(p)).font(Brand.mono(10)).foregroundStyle(.tertiary)
                         .frame(width: 52, alignment: .trailing)
                     procMenu(p)
                 }
@@ -525,7 +536,7 @@ struct PopupView: View {
                 }
             }
         } label: {
-            Image(systemName: "ellipsis").font(.system(size: Brand.scaled(10))).foregroundStyle(Brand.textTertiary)
+            Image(systemName: "ellipsis").font(.system(size: Brand.scaled(10))).foregroundStyle(.secondary)
                 .frame(width: 16, height: 16).contentShape(Rectangle())
         }
         .menuStyle(.borderlessButton)
@@ -587,9 +598,14 @@ struct PopupView: View {
                 Image(systemName: glyph).font(.system(size: Brand.scaled(10), weight: .medium))
                 Text(label).font(Brand.mono(10, .medium))
             }
-            .foregroundStyle(active ? Brand.gold : Brand.textSecondary)
+            .foregroundStyle(active ? Brand.gold : Color.secondary)
             .padding(.horizontal, 9).padding(.vertical, 5)
-            .background(Capsule().fill(active ? Brand.gold.opacity(0.16) : Brand.chipFill))
+            .background(Capsule().fill(active ? Brand.gold.opacity(0.28) : LiquidGlassMaterials.chipFill))
+            .overlay(
+                Capsule().strokeBorder(
+                    active ? Brand.gold.opacity(0.55) : Brand.hairline,
+                    lineWidth: LiquidGlassMaterials.increaseContrast ? 1.25 : 0.75)
+            )
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -609,7 +625,7 @@ struct PopupView: View {
                     Spacer()
                     Text(String(format: NSLocalizedString("%@ cleaned · %d uninstalled · %d optimized", comment: ""),
                                 Fmt.bytes(totals.cleanedBytes), totals.uninstalledApps, totals.optimizeRuns))
-                        .font(Brand.mono(9)).foregroundStyle(Brand.textSecondary)
+                        .font(Brand.mono(9)).foregroundStyle(.secondary)
                 }
             }
             // Icon pills — text labels for every tool overflow the narrow
@@ -625,10 +641,14 @@ struct PopupView: View {
                 ForEach(Tool.navOrder) { tool in
                     Button { open(.tool(tool)) } label: {
                         Image(systemName: tool.glyph)
-                            .font(.system(size: Brand.scaled(12), weight: .medium))
+                            .font(.system(size: Brand.scaled(12), weight: .semibold))
                             .foregroundStyle(tool.accent)
                             .frame(maxWidth: .infinity, minHeight: 26)
-                            .background(Capsule().fill(Brand.chipFill))
+                            .background(Capsule().fill(LiquidGlassMaterials.chipFill))
+                            .overlay(
+                                Capsule()
+                                    .strokeBorder(tool.accent.opacity(0.45), lineWidth: 0.75)
+                            )
                     }
                     .buttonStyle(.plain)
                     .help(tool.title)
@@ -641,21 +661,21 @@ struct PopupView: View {
                 Spacer()
                 Button(NSLocalizedString("Open Burrow", comment: "")) { open(.home) }
                     .buttonStyle(.plain)
-                    .font(Brand.sans(11, .semibold)).foregroundStyle(Brand.textPrimary)
+                    .font(Brand.sans(11, .semibold)).foregroundStyle(.primary)
                 iconButton("power") { NSApp.terminate(nil) }
             }
             // `verbatim:` so the port isn't localized into "9,277".
             Text(verbatim: Store.queryServerEnabled
                  ? "MCP · 127.0.0.1:\(Store.queryServerPort) + stdio"
                  : "MCP · stdio (burrow --mcp)")
-                .font(Brand.mono(9)).foregroundStyle(Brand.textTertiary)
+                .font(Brand.mono(9)).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
     private func iconButton(_ symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol).font(.system(size: Brand.scaled(12))).foregroundStyle(Brand.textSecondary)
+            Image(systemName: symbol).font(.system(size: Brand.scaled(12))).foregroundStyle(.secondary)
         }.buttonStyle(.plain)
     }
 

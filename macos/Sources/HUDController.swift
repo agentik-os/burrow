@@ -98,6 +98,12 @@ final class HUDController: NSViewController {
 
     override func viewDidLayout() {
         super.viewDidLayout()
+        // macOS 26 draws the HUD with Liquid Glass. An opaque popover plate
+        // would hide the lens. Older systems keep the system popover fill.
+        if #available(macOS 26, *) {
+            view.window?.isOpaque = false
+            view.window?.backgroundColor = .clear
+        }
         syncPopoverHeight()
     }
 

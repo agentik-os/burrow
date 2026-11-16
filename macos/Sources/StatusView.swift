@@ -65,6 +65,7 @@ struct StatusView: View {
             .padding(.bottom, 28)
         }
         .scrollIndicators(.hidden)
+        .scrollEdgeGlass()
         .fadeEdges()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // Three task-scoped subscriptions replace the old 2 s + 15 s timer

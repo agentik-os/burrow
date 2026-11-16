@@ -78,17 +78,21 @@ enum Brand {
     static let nearBlack = Color.adaptive(0x0F0B05, 0xE8E1D4)
 
     // MARK: Text — warm off-white (dark) / warm espresso (light)
+    // Secondary / tertiary alphas target WCAG AA (≥ 4.5:1) on Brand.cardFill
+    // and on LiquidGlassMaterials.cardFill over the menu HUD scrim.
     static let ink           = Color.adaptive(0xEDE6DA, 0x221B11)
     static let textPrimary   = Color.adaptive(0xEDE6DA, 0x221B11)
-    static let textSecondary = Color.adaptive(0xEDE6DA, 0x221B11, darkA: 0.62, lightA: 0.62)
-    static let textTertiary  = Color.adaptive(0xEDE6DA, 0x221B11, darkA: 0.40, lightA: 0.46)
+    static let textSecondary = Color.adaptive(0xEDE6DA, 0x221B11, darkA: 0.78, lightA: 0.74)
+    static let textTertiary  = Color.adaptive(0xEDE6DA, 0x221B11, darkA: 0.64, lightA: 0.62)
 
-    // MARK: Surfaces — warm-white lift (dark) / warm cards over paper (light)
-    static let hairline      = Color.adaptive(0xF2ECE0, 0x2A2114, darkA: 0.10, lightA: 0.12)
-    static let cardFill      = Color.adaptive(0xF2ECE0, 0xFFFFFF, darkA: 0.07, lightA: 0.66)
-    static let cardFillHover = Color.adaptive(0xF2ECE0, 0xFFFFFF, darkA: 0.11, lightA: 0.90)
-    static let chipFill      = Color.adaptive(0xF2ECE0, 0x2A2114, darkA: 0.08, lightA: 0.07)
-    static let trackFill     = Color.adaptive(0xF2ECE0, 0x2A2114, darkA: 0.10, lightA: 0.10)
+    // MARK: Surfaces — elevated warm board (dark) / warm cards over paper (light)
+    // Dark cards must stay dark (not a high-alpha cream wash) so ink at full /
+    // 0.78 / 0.62 alpha keeps ≥ 4.5:1. Light cards use near-opaque white.
+    static let hairline      = Color.adaptive(0xF2ECE0, 0x2A2114, darkA: 0.16, lightA: 0.16)
+    static let cardFill      = Color.adaptive(0x2F281F, 0xFFFFFF, darkA: 0.90, lightA: 0.96)
+    static let cardFillHover = Color.adaptive(0x3A3126, 0xFFFFFF, darkA: 0.96, lightA: 1.0)
+    static let chipFill      = Color.adaptive(0xF2ECE0, 0x2A2114, darkA: 0.18, lightA: 0.12)
+    static let trackFill     = Color.adaptive(0xF2ECE0, 0x2A2114, darkA: 0.14, lightA: 0.12)
     /// Recessed panel/track — darker than the ground in both modes.
     static let insetFill     = Color.adaptive(0x000000, 0x2A2114, darkA: 0.22, lightA: 0.07)
 
