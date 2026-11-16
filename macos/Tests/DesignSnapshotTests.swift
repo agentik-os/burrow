@@ -235,6 +235,7 @@ private struct MonitorChartsPreview: View {
     private func tile(_ title: String, _ glyph: String, _ value: String, _ unit: String, _ series: [Double]) -> some View {
         ValueTile(eyebrow: title, glyph: glyph, accent: Brand.accent,
                   value: value, unit: unit, values: series, chartStyle: .area,
+                  domain: unit == "%" ? .percent : .fromZero,
                   footnote: "last 30 minutes")
     }
 }
@@ -253,11 +254,11 @@ private struct PopoverPreview: View {
             GlassGroup(spacing: 8) {
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
                     ValueTile(variant: .hud, eyebrow: "CPU", glyph: "cpu", accent: Brand.accent,
-                              value: "20", unit: "%", values: ChartFixture.cpu, footnote: "load 6.70")
+                              value: "20", unit: "%", values: ChartFixture.cpu, domain: .percent, footnote: "load 6.70")
                     ValueTile(variant: .hud, eyebrow: "GPU", glyph: "cpu.fill", accent: Brand.accent,
-                              value: "45", unit: "%", values: ChartFixture.gpu, footnote: "M5 Max")
+                              value: "45", unit: "%", values: ChartFixture.gpu, domain: .percent, footnote: "M5 Max")
                     ValueTile(variant: .hud, eyebrow: "Memory", glyph: "memorychip", accent: Brand.accent,
-                              value: "49", unit: "%", values: ChartFixture.mem, footnote: "31.3 / 64 GB")
+                              value: "49", unit: "%", values: ChartFixture.mem, domain: .percent, footnote: "31.3 / 64 GB")
                     ValueTile(variant: .hud, eyebrow: "Network", glyph: "network", accent: Brand.accent,
                               value: "76.3", unit: "MB/s", values: ChartFixture.net, footnote: "en0")
                 }
@@ -344,8 +345,9 @@ private struct HistoryChartPreview: View {
                             .font(Brand.sans(10)).foregroundStyle(Brand.textTertiary)
                     }
                 }
+                .chartYScale(domain: 0...100)
                 .chartYAxis {
-                    AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { _ in
+                    AxisMarks(position: .leading, values: [0, 50, 100]) { _ in
                         AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5)).foregroundStyle(Brand.hairline)
                         AxisValueLabel().font(Brand.sans(10)).foregroundStyle(Brand.textTertiary)
                     }

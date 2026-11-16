@@ -24,6 +24,10 @@ final class HUDController: NSViewController {
 
     init(root: PopupView) {
         self.hosting = NSHostingView(rootView: root)
+        // The menu-bar HUD is the dark glass panel, even when the desktop
+        // is in light mode. Set it before the window exists so the first
+        // layout already resolves the dark palette.
+        self.hosting.appearance = NSAppearance(named: .darkAqua)
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
@@ -98,6 +102,10 @@ final class HUDController: NSViewController {
 
     override func viewDidLayout() {
         super.viewDidLayout()
+        // Let Liquid Glass sample the desktop instead of an opaque popover fill.
+        view.window?.isOpaque = false
+        view.window?.backgroundColor = .clear
+        view.window?.appearance = NSAppearance(named: .darkAqua)
         syncPopoverHeight()
     }
 

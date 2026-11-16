@@ -401,7 +401,8 @@ struct HistoryView: View {
                     Spacer()
                     if series.count > 1 { legend(series) }
                 }
-                chartBody(series, marks: m.marks, height: 240, title: m.title)
+                chartBody(series, marks: m.marks, height: 220, title: m.title,
+                          percent: ["cpu", "mem", "gpu", "battery", "health"].contains(m.id))
             }
         }
     }
@@ -457,7 +458,8 @@ struct HistoryView: View {
 
     @ViewBuilder
     private func chartBody(_ series: [(name: String, points: [ChartPoint], color: Color)],
-                           marks: ChartMarks, height: CGFloat, title: String) -> some View {
+                           marks: ChartMarks, height: CGFloat, title: String,
+                           percent: Bool = false) -> some View {
         let allEmpty = series.allSatisfy { $0.points.isEmpty }
         let style = AxisStyle.forRangeMinutes(range.minutes)
         let window = Double(range.minutes * 60)
@@ -551,6 +553,7 @@ struct HistoryView: View {
                         }
                     }
                     .chartXScale(domain: snapshot.windowSince...snapshot.windowUntil)
+                    .chartYScale(domain: yScale(series, percent: percent))
                     .chartLegend(.hidden)
                     .chartOverlay { proxy in
                         GeometryReader { geo in
@@ -576,6 +579,15 @@ struct HistoryView: View {
                     }
                     .frame(height: height)
                 }
+    }
+
+    /// Percent metrics stay on 0…100. Everything else starts at zero and
+    /// stops just above the peak, so a quiet series is not stretched full-height.
+    private func yScale(_ series: [(name: String, points: [ChartPoint], color: Color)],
+                        percent: Bool) -> ClosedRange<Double> {
+        if percent { return 0...100 }
+        let peak = series.flatMap { $0.points.map(\.value) }.max() ?? 0
+        return 0...max(peak * 1.12, 1)
     }
 
     // MARK: - Drag-to-select (spike forensics)

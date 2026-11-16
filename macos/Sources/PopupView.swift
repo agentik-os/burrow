@@ -60,7 +60,7 @@ struct PopupView: View {
         // Which sections appear is user-customizable (issue #82); read once per
         // body eval, so a Settings change shows on the next popover open.
         let sections = Store.popupSections
-        return VStack(alignment: .leading, spacing: 9) {
+        return VStack(alignment: .leading, spacing: 10) {
             if let s = model.snap {
                 if sections.contains(.header) { header(s) }
                 if sections.contains(.chips) { chipsRow(s) }
@@ -89,12 +89,17 @@ struct PopupView: View {
                 footer
             }
         }
-        .padding(13)
+        .padding(14)
         // Width tracks the interface text scale (issue #407) so larger type
         // keeps roughly the same line lengths instead of wrapping everywhere.
         // HUDController sizes the popover from the same number.
         .frame(width: Brand.scaled(334))
-        .background(.ultraThinMaterial)
+        // Always the dark glass panel — the menu bar HUD does not follow a
+        // light desktop. macOS 26 draws real Liquid Glass; earlier systems
+        // get a dark thin material with the same specular edge.
+        .background { PopupGlass() }
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .environment(\.colorScheme, .dark)
         .fixedSize(horizontal: false, vertical: true)
         // Three task-scoped subscriptions replace the old 1 s + 20 s timer
         // pair (issue #53): the snapshot and sparkline pumps are shared with
@@ -112,9 +117,9 @@ struct PopupView: View {
         Button { open(.home) } label: {
             HStack(spacing: 8) {
                 Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: Brand.scaled(13))).foregroundStyle(HealthRating.color(s.healthScore))
-                Text("\(s.healthScore)").font(Brand.mono(16, .semibold)).foregroundStyle(Brand.textPrimary)
-                Text(headline(s)).font(Brand.sans(11)).foregroundStyle(Brand.textSecondary)
+                    .font(.system(size: Brand.scaled(13))).foregroundStyle(Brand.textSecondary)
+                Text("\(s.healthScore)").font(Brand.mono(18, .semibold)).foregroundStyle(Brand.textPrimary)
+                Text(headline(s)).font(Brand.sans(12)).foregroundStyle(Brand.textSecondary)
                     .lineLimit(1).truncationMode(.tail)
                 Spacer(minLength: 6)
                 // Render the free-space line unconditionally (empty string when
@@ -126,7 +131,7 @@ struct PopupView: View {
                 // EXC_BAD_ACCESS (Sentry BURROW-9A, same class as the BURROW-K
                 // popover fault).
                 Text(freeSpace(s))
-                    .font(Brand.mono(10)).foregroundStyle(Brand.textTertiary)
+                    .font(Brand.sans(12)).foregroundStyle(Brand.textTertiary)
                 Image(systemName: "chevron.right").font(.system(size: Brand.scaled(9), weight: .semibold))
                     .foregroundStyle(Brand.textTertiary)
             }
@@ -191,10 +196,10 @@ struct PopupView: View {
     private var activitySection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                Eyebrow(text: "Activity", glyph: "bolt.fill", color: Brand.gold)
+                Eyebrow(text: "Activity", glyph: "bolt.fill", color: Brand.textSecondary)
                 Spacer()
                 if runningCount > 0 {
-                    Text("\(runningCount) running").font(Brand.mono(9, .medium)).foregroundStyle(Brand.gold)
+                    Text("\(runningCount) running").font(Brand.sans(11, .medium)).foregroundStyle(Brand.textSecondary)
                 }
             }
             ForEach(ops.ops) { op in opRow(op) }
@@ -290,26 +295,26 @@ struct PopupView: View {
 
     private func metricGrid(_ s: MoleStatus) -> some View {
         let tiles = Store.popupTiles   // which tiles the user wants (issue #82)
-        return LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+        return GlassGroup(spacing: 8) { LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
             if tiles.contains(.cpu) {
                 ValueTile(variant: .hud, eyebrow: "CPU", glyph: "cpu", accent: Brand.accent,
                           value: String(format: "%.0f", s.cpu.usage), unit: "%",
                           chip: (s.thermal?.cpuTemp).flatMap { $0 > 0 ? (String(format: "%.0f°C", $0), Brand.amber) : nil },
-                          values: model.cpuHist, chartStyle: .area,
+                          values: model.cpuHist, chartStyle: .area, domain: .percent,
                           footnote: String(format: "load %.2f", s.cpu.load1))
             }
             if tiles.contains(.gpu) {
                 ValueTile(variant: .hud, eyebrow: "GPU", glyph: "cpu.fill", accent: Brand.accent,
                           value: gpuValue(s).0, unit: gpuValue(s).1,
                           chip: (s.thermal?.gpuTemp).flatMap { $0 > 0 ? (String(format: "%.0f°C", $0), Brand.amber) : nil },
-                          values: model.gpuHist, chartStyle: .area,
+                          values: model.gpuHist, chartStyle: .area, domain: .percent,
                           footnote: (s.gpu?.first?.name ?? "GPU").replacingOccurrences(of: "Apple ", with: ""))
             }
             if tiles.contains(.memory) {
                 ValueTile(variant: .hud, eyebrow: "Memory", glyph: "memorychip", accent: Brand.accent,
                           value: String(format: "%.0f", s.memory.usedPercent), unit: "%",
                           chip: memChip(s),
-                          values: model.memHist, chartStyle: .area,
+                          values: model.memHist, chartStyle: .area, domain: .percent,
                           footnote: String(format: "%.1f/%.0f GB · swap %.1f GB",
                                            Fmt.gib(s.memory.used), Fmt.gib(s.memory.total), Fmt.gib(s.memory.swapUsed)))
             }
@@ -317,12 +322,12 @@ struct PopupView: View {
             if tiles.contains(.network) {
                 ValueTile(variant: .hud, eyebrow: "Network", glyph: "network", accent: Brand.accent,
                           value: netValue(s).0, unit: netValue(s).1,
-                          chip: (s.network.first(where: { !$0.ip.isEmpty })?.name).map { ($0, Brand.blue) },
+                          chip: (s.network.first(where: { !$0.ip.isEmpty })?.name).map { ($0, Brand.textSecondary) },
                           values: model.netHist, chartStyle: .area,
                           footnote: netFoot(s))
             }
             if tiles.contains(.fan) { fanTile(s) }
-        }
+        } }
     }
 
     /// DISK tile: total chip, free headline, used bar + line.
@@ -409,29 +414,29 @@ struct PopupView: View {
                 HStack(spacing: 8) {
                     // Accent semantics live in PowerAccent (Format.swift):
                     // red = low, green = charging/full, amber = discharging.
-                    Eyebrow(text: "Battery", glyph: "battery.100",
-                            color: PowerAccent.battery(percent: b.percent, status: b.status))
+                    Eyebrow(text: "Battery", glyph: "battery.100", color: Brand.textSecondary)
                     Spacer()
                     Chip(text: String(format: NSLocalizedString("%d%% Health", comment: ""), b.capacity),
-                         color: b.health == "Good" ? Brand.green : Brand.gold)
+                         color: Brand.textSecondary)
                 }
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(alignment: .firstTextBaseline, spacing: 3) {
-                            Text(String(format: "%.0f%%", b.percent))
-                                .font(Brand.mono(16, .semibold)).foregroundStyle(Brand.textPrimary)
+                            Text(String(format: "%.0f", b.percent))
+                                .font(Brand.mono(22, .semibold)).foregroundStyle(Brand.textPrimary)
+                            Text("%").font(Brand.sans(12)).foregroundStyle(Brand.textSecondary)
                             if !b.timeLeft.isEmpty {
-                                Text(b.timeLeft).font(Brand.mono(10)).foregroundStyle(Brand.textSecondary)
+                                Text(b.timeLeft).font(Brand.sans(11)).foregroundStyle(Brand.textSecondary)
                             }
                         }
                         Text(batterySubline(b))
-                            .font(Brand.mono(9)).foregroundStyle(Brand.textTertiary)
+                            .font(Brand.sans(11)).foregroundStyle(Brand.textTertiary)
                     }
                     Spacer()
                     HStack(spacing: 8) {
                         RingGauge(percent: b.percent,
-                                  color: PowerAccent.battery(percent: b.percent, status: b.status),
-                                  glyph: "laptopcomputer", label: NSLocalizedString("Mac", comment: ""), size: 34)
+                                  color: Brand.accent,
+                                  glyph: "laptopcomputer", label: NSLocalizedString("Mac", comment: ""), size: 36)
                         ForEach(Array(bluetoothWithBattery(s).prefix(3).enumerated()), id: \.offset) { _, device in
                             RingGauge(percent: Double(device.batteryPercent ?? 0),
                                       color: PowerAccent.level(device.batteryPercent ?? 0),
@@ -599,7 +604,7 @@ struct PopupView: View {
             // read as "you never cleaned".
             if let totals = model.cleanWatch, !totals.isEmpty {
                 HStack(spacing: 10) {
-                    Eyebrow(text: "Clean Watch", glyph: "sparkles", color: Tool.clean.accent)
+                    Eyebrow(text: "Clean Watch", glyph: "sparkles", color: Brand.textSecondary)
                     Spacer()
                     Text(String(format: NSLocalizedString("%@ cleaned · %d uninstalled · %d optimized", comment: ""),
                                 Fmt.bytes(totals.cleanedBytes), totals.uninstalledApps, totals.optimizeRuns))
@@ -655,6 +660,28 @@ struct PopupView: View {
     }
     private func openSettings() { open(.settings) }
     private func openHistory() { open(.home) }   // History lives in Home now
+}
+
+/// The menu-bar panel. Liquid Glass on macOS 26, a dark thin material before that.
+private struct PopupGlass: View {
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 18, style: .continuous)
+        if #available(macOS 26, *) {
+            Color.clear.glassEffect(.regular, in: shape)
+        } else {
+            ZStack {
+                shape.fill(Color(hex: 0x141414).opacity(0.82))
+                shape.fill(.ultraThinMaterial)
+            }
+            .overlay(
+                shape.strokeBorder(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.28), Color.white.opacity(0.05)],
+                        startPoint: .top, endPoint: .bottom),
+                    lineWidth: 0.7)
+            )
+        }
+    }
 }
 
 // MARK: - Model (same data path as StatusModel, lighter)

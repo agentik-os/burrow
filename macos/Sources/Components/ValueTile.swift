@@ -23,6 +23,7 @@ struct ValueTile: View {
     var chip: (String, Color)? = nil
     let values: [Double]
     var chartStyle: MiniChart.Style = .area
+    var domain: MiniChart.Domain = .fromZero
     /// When set, the chart renders two lines (network download/upload) instead
     /// of the single `values` series.
     var dual: (down: [Double], up: [Double], downColor: Color, upColor: Color)? = nil
@@ -41,9 +42,9 @@ struct ValueTile: View {
     @ViewBuilder
     private var chart: some View {
         if let d = dual {
-            DualMiniChart(down: d.down, up: d.up, downColor: d.downColor, upColor: d.upColor)
+            DualMiniChart(down: d.down, up: d.up, downColor: d.downColor, upColor: d.upColor, domain: domain)
         } else {
-            MiniChart(values: values, color: accent, style: chartStyle)
+            MiniChart(values: values, color: accent, style: chartStyle, domain: domain)
         }
     }
 

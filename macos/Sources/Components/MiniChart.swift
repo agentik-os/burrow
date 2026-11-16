@@ -12,10 +12,14 @@ import SwiftUI
 
 struct MiniChart: View {
     enum Style { case area, bars }
+    /// `.percent` is always 0…100, so 15% sits near the bottom.
+    /// `.fromZero` starts at 0 and ends just above the peak.
+    enum Domain { case percent, fromZero }
 
     let values: [Double]
     var color: Color
     var style: Style = .area
+    var domain: Domain = .fromZero
     /// Parked fans are a real all-zero series. Everything else treats a
     /// flat zero as "no samples yet" instead of drawing a dead line.
     var allowsFlat: Bool = false
@@ -81,35 +85,43 @@ struct MiniChart: View {
     private func sparkline(w: CGFloat, h: CGFloat) -> some View {
         let pts = points(w: w, h: h)
         return ZStack {
-            ChartSmoothing.area(pts, bottom: h)
+            guides(w: w, h: h)
+            ChartSmoothing.area(pts, bottom: h - 1)
                 .fill(LinearGradient(
-                    colors: [color.opacity(0.32), color.opacity(0.04), color.opacity(0)],
+                    colors: [color.opacity(0.22), color.opacity(0)],
                     startPoint: .top, endPoint: .bottom))
             ChartSmoothing.curve(pts)
-                .stroke(color, style: StrokeStyle(lineWidth: 1.75, lineCap: .round, lineJoin: .round))
+                .stroke(color, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
+            if let last = pts.last {
+                Circle().fill(color).frame(width: 4, height: 4).position(last)
+            }
         }
+    }
+
+    /// Honest scale marks: baseline always, and a midpoint when the axis is 0…100.
+    private func guides(w: CGFloat, h: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            if domain == .percent {
+                Spacer()
+                Rectangle().fill(Brand.hairline).frame(height: 0.5)
+            }
+            Spacer()
+            Rectangle().fill(Brand.hairline).frame(height: 0.5)
+        }
+        .frame(width: w, height: h)
     }
 
     private func points(w: CGFloat, h: CGFloat) -> [CGPoint] {
         let vals = samples
-        let (lo, hi) = bounds(vals)
+        let (lo, hi) = ChartSmoothing.scale(vals, domain: domain)
         let denom = max(hi - lo, 0.0001)
         let n = vals.count
+        let plotH = h - 3
         return vals.enumerated().map { i, v in
-            let x = n == 1 ? w / 2 : w * CGFloat(i) / CGFloat(n - 1)
-            let y = (1.0 - CGFloat((v - lo) / denom)) * (h - 2) + 1
+            let x = n == 1 ? w / 2 : w * CGFloat(i) / CGFloat(max(n - 1, 1))
+            let y = (1.0 - CGFloat((min(max(v, lo), hi) - lo) / denom)) * plotH + 1
             return CGPoint(x: x, y: y)
         }
-    }
-
-    /// Floor at 0. A steady non-zero series sits in the band instead of
-    /// pinning to the ceiling; a dead-flat zero is handled by `silent`.
-    private func bounds(_ vals: [Double]) -> (lo: Double, hi: Double) {
-        let lo = min(vals.min() ?? 0, 0)
-        let hi = vals.max() ?? 1
-        if hi - lo < 0.001 { return (0, max(hi * 1.35, 1)) }
-        let pad = (hi - lo) * 0.12
-        return (lo, hi + pad)
     }
 
     private static func format(_ v: Double) -> String {
@@ -124,6 +136,7 @@ struct DualMiniChart: View {
     let up: [Double]
     var downColor: Color
     var upColor: Color
+    var domain: MiniChart.Domain = .fromZero
 
     var body: some View {
         GeometryReader { geo in
@@ -135,7 +148,7 @@ struct DualMiniChart: View {
                 Capsule().fill(Brand.trackFill).frame(height: 2)
                     .frame(maxHeight: .infinity, alignment: .center)
             } else {
-                let hi = max(d.max() ?? 0, u.max() ?? 0, 0.0001) * 1.12
+                let hi = ChartSmoothing.scale(d + u, domain: domain).hi
                 ZStack {
                     series(d, w: w, h: h, hi: hi, color: downColor)
                     series(u, w: w, h: h, hi: hi, color: upColor)
@@ -165,11 +178,21 @@ struct DualMiniChart: View {
 }
 
 enum ChartSmoothing {
-    /// Bucket a noisy feed, then a short moving average, capped so a
-    /// sparkline never plots hundreds of kinks.
-    static func prepare(_ values: [Double], maxPoints: Int = 48) -> [Double] {
-        let tail = values.count > 240 ? Array(values.suffix(240)) : values
-        return movingAverage(downsample(tail, to: maxPoints), window: 3)
+    /// Keep the real samples. Only a long feed is reduced, and each bucket
+    /// keeps its peak so a spike is not averaged away.
+    static func prepare(_ values: [Double], maxPoints: Int = 72) -> [Double] {
+        let tail = values.count > 360 ? Array(values.suffix(360)) : values
+        return downsample(tail, to: maxPoints)
+    }
+
+    static func scale(_ values: [Double], domain: MiniChart.Domain) -> (lo: Double, hi: Double) {
+        switch domain {
+        case .percent:
+            return (0, 100)
+        case .fromZero:
+            let peak = values.max() ?? 0
+            return (0, peak <= 0 ? 1 : peak * 1.12)
+        }
     }
 
     static func downsample(_ values: [Double], to max: Int) -> [Double] {
@@ -178,19 +201,7 @@ enum ChartSmoothing {
         return (0..<max).map { i in
             let start = Int(Double(i) * step)
             let end = min(values.count, max(start + 1, Int(Double(i + 1) * step)))
-            let slice = values[start..<end]
-            return slice.reduce(0, +) / Double(slice.count)
-        }
-    }
-
-    static func movingAverage(_ values: [Double], window: Int) -> [Double] {
-        guard window > 1, values.count > window else { return values }
-        let half = window / 2
-        return values.indices.map { i in
-            let lo = max(0, i - half)
-            let hi = min(values.count, i + half + 1)
-            let slice = values[lo..<hi]
-            return slice.reduce(0, +) / Double(slice.count)
+            return values[start..<end].max() ?? 0
         }
     }
 
@@ -209,8 +220,9 @@ enum ChartSmoothing {
             let p1 = pts[i]
             let p2 = pts[i + 1]
             let p3 = pts[min(i + 2, pts.count - 1)]
-            let c1 = CGPoint(x: p1.x + (p2.x - p0.x) / 6, y: p1.y + (p2.y - p0.y) / 6)
-            let c2 = CGPoint(x: p2.x - (p3.x - p1.x) / 6, y: p2.y - (p3.y - p1.y) / 6)
+            // Tight handles: the curve passes the samples instead of bowing past them.
+            let c1 = CGPoint(x: p1.x + (p2.x - p0.x) / 10, y: p1.y + (p2.y - p0.y) / 10)
+            let c2 = CGPoint(x: p2.x - (p3.x - p1.x) / 10, y: p2.y - (p3.y - p1.y) / 10)
             path.addCurve(to: p2, control1: c1, control2: c2)
         }
         return path
